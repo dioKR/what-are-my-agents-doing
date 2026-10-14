@@ -17,9 +17,13 @@ jobs:
       - name: Create the release for this tag
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # 릴리스 설명은 CHANGELOG.md 에서 이 버전 부분을 그대로 가져온다
         run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          awk -v v="$VERSION" '$0 == "## " v { found = 1; next } /^## / { found = 0 } found' CHANGELOG.md > notes.md
+          printf '\n---\nDownload the app below, or see https://dioKR.github.io/what-are-my-agents-doing/ (it also shows how to open it the first time). From the terminal: `npx wamad`.\n' >> notes.md
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
-          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "Download the app for your computer below. See https://dioKR.github.io/what-are-my-agents-doing/ for how to open it the first time."
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
 
   build:
     needs: create-release
