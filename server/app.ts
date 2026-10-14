@@ -3,13 +3,14 @@
 // 명령줄(server/index.ts)과 데스크톱 앱(desktop/main.mjs)이 startServer()로 같은 서버를 켠다. 한 프로세스에 하나만 켠다.
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { extname, join, normalize } from 'node:path';
+import { extname } from 'node:path';
 import { PROTOCOL_VERSION, type AgentSnapshot, type ServerMessage } from '../shared/protocol.ts';
 import { applyClaudeHook, isClaudeHookPayload, type ClaudeHookPayload } from './claudeHook.ts';
 import { ACTIVE_WINDOW_MS, watchTranscripts } from './transcriptWatcher.ts';
 import { routeEvent } from './team.ts';
 import { readContextUsedRatio } from './transcript.ts';
 import { buy, earn, equip, rewardsFor, WalletStore, type ShopResult } from './wallet.ts';
+import { staticFilePath } from './staticPath.ts';
 import type { RewardReason, ShopSlot } from '../shared/shop.ts';
 
 const HOST = '127.0.0.1';
@@ -139,8 +140,11 @@ const CONTENT_TYPES: Record<string, string> = {
 };
 
 async function serveStatic(pathname: string, res: ServerResponse): Promise<void> {
-  const safe = normalize(pathname).replace(/^(\.\.[/\\])+/, '');
-  const file = join(webRoot, safe === '/' ? 'index.html' : safe);
+  const file = staticFilePath(webRoot, pathname);
+  if (!file) {
+    res.writeHead(404).end();
+    return;
+  }
   try {
     const data = await readFile(file);
     res.writeHead(200, { 'Content-Type': CONTENT_TYPES[extname(file)] ?? 'application/octet-stream' });

@@ -1,6 +1,6 @@
 // 도구 호출을 사람이 읽는 한 문장으로 바꾼다. 화면이 언어를 고를 수 있게 한국어·영어를 함께 만든다.
 // 예: Bash "npm test" → { ko: '테스트 돌리는 중', en: 'Running tests' }
-import { basename, isAbsolute, relative } from 'node:path';
+import { shortPath } from './shortPath.ts';
 import { isBroadcastRecipient, type LocalText } from '../shared/protocol.ts';
 
 const MAX_TARGET = 40;
@@ -31,7 +31,10 @@ export function mailSummary(channel: string, target: string, direction: 'sent' |
 }
 
 export function humanizeTool(toolName: string, input: Record<string, unknown>, cwd: string): LocalText {
-  const file = () => shortPath(text(input, 'file_path') || text(input, 'notebook_path') || text(input, 'path'), cwd);
+  const file = () => {
+    const target = text(input, 'file_path') || text(input, 'notebook_path') || text(input, 'path');
+    return target ? shortPath(target, cwd, MAX_TARGET) : 'file';
+  };
   switch (toolName) {
     case 'Read': return both(`${file()} 읽는 중`, `Reading ${file()}`);
     case 'Edit': case 'MultiEdit': case 'NotebookEdit': return both(`${file()} 고치는 중`, `Editing ${file()}`);
@@ -98,14 +101,6 @@ function clip(value: string, max = MAX_TARGET): string {
   return oneLine.length > max ? oneLine.slice(0, max - 1) + '…' : oneLine;
 }
 
-function shortPath(path: string, cwd: string): string {
-  if (!path) return 'file';
-  if (cwd && isAbsolute(path)) {
-    const rel = relative(cwd, path);
-    if (!rel.startsWith('..') && rel.length <= MAX_TARGET) return rel;
-  }
-  return basename(path);
-}
 
 function hostOf(url: string): string {
   try {

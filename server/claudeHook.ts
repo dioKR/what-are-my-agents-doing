@@ -1,10 +1,10 @@
 // Claude Code 훅이 보내는 JSON을 받아 에이전트 상태(AgentSnapshot)로 바꾼다.
 // 순수 함수만 둔다: 같은 입력이면 같은 결과. 파일 읽기 같은 일은 index.ts가 한다.
-import { basename, relative, isAbsolute } from 'node:path';
 import { STUCK_FAIL_STREAK, type Activity, type AgentSnapshot, type MailRecord, type TodoItem } from '../shared/protocol.ts';
 import { PHRASES, cleanPrompt, firstParagraph, humanizeTool, mailSummary, messageSent, requestReceived } from './humanize.ts';
 import { extractLinks } from './links.ts';
 import { projectDirOf } from './projectDir.ts';
+import { shortPath } from './shortPath.ts';
 import type { AgentLink, LocalText } from '../shared/protocol.ts';
 
 export interface ClaudeHookPayload {
@@ -259,13 +259,6 @@ export function describeTool(toolName: string, input: Record<string, unknown>, c
   return target ? `${toolName} ${truncate(target, 60)}` : toolName;
 }
 
-function shortPath(path: string, cwd: string): string {
-  if (cwd && isAbsolute(path)) {
-    const rel = relative(cwd, path);
-    if (!rel.startsWith('..')) return rel;
-  }
-  return basename(path);
-}
 
 function readTodos(input: Record<string, unknown>): TodoItem[] {
   const raw = input.todos;

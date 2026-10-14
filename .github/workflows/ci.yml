@@ -32,3 +32,20 @@ jobs:
           name: e2e-artifacts
           path: e2e-artifacts/
           if-no-files-found: ignore
+
+  # 윈도우에서 경로 처리 같은 문제가 없는지: 타입 검사 · 단위 테스트 · 빌드
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Type check
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build && npm run build:server
