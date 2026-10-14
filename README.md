@@ -1,5 +1,8 @@
 # What Are My Agents Doing?
 
+<p align="center"><img src="docs/images/dance.gif" width="420" alt="Agents whose context is more than 80% full dancing in the hidden ??? room"></p>
+<p align="center"><sub>When an agent's context passes 80%, it sneaks off to the hidden <b>???</b> room to dance.</sub></p>
+
 **A local dashboard that shows what the Claude Code agents on your machine are doing right now, as a pixel-art office you can take in at a glance.**
 
 The command is **`wamad`**, from the initials.

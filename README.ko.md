@@ -1,5 +1,8 @@
 # What Are My Agents Doing? (내 에이전트들은 뭘 하고 있을까?)
 
+<p align="center"><img src="docs/images/dance.gif" width="420" alt="컨텍스트가 80% 넘게 찬 에이전트들이 숨은 ??? 방에서 춤추는 모습"></p>
+<p align="center"><sub>컨텍스트가 80%를 넘은 에이전트는 몰래 숨은 <b>???</b> 방에 가서 춤춥니다.</sub></p>
+
 **내 컴퓨터에서 돌아가는 Claude Code 에이전트들이 지금 뭘 하는지, 픽셀 회사 화면으로 한눈에 보여 주는 로컬 대시보드**
 
 명령어 이름은 첫 글자를 딴 **`wamad`** 입니다.
