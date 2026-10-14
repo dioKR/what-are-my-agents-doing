@@ -7,7 +7,11 @@ import { DOLL_FOOT_Y, DOLL_W } from './character/doll.ts';
 import { lt, t } from '../i18n.ts';
 import { recipientLabel } from './team.ts';
 
+/** 캐릭터 머리 위에 잠깐 떠오르는 "+코인" */
+export interface CoinPop { id: number; agentId: string; amount: number }
+
 const BUBBLE_SIDE_GAP = -2;
+const COIN_POP_Y = 2; // 머리 꼭대기쯤
 const BUBBLE_FACE_Y = 19; // 얼굴 높이쯤
 const NAME_Y = DOLL_FOOT_Y + 3; // 발 바로 아래
 /** 말풍선은 손이 바쁠 때만 띄운다. 기다리거나 자는 중이면 카드와 상세 칸으로 충분하다. */
@@ -32,7 +36,8 @@ export class MapLabels {
   }
 
   /** origin: 화면 왼쪽 위가 지도의 어디인지 (지도 픽셀) */
-  update(director: ActorDirector, agents: ReadonlyMap<string, AgentSnapshot>, nameOf: (id: string) => string, scale: number, origin: { x: number; y: number }, selectedId: string | null): void {
+  /** coinPops: 방금 코인을 번 캐릭터 머리 위에 띄울 "+코인" (id가 같으면 같은 글자) */
+  update(director: ActorDirector, agents: ReadonlyMap<string, AgentSnapshot>, nameOf: (id: string) => string, scale: number, origin: { x: number; y: number }, selectedId: string | null, coinPops: ReadonlyArray<CoinPop> = []): void {
     const seen = new Set<string>();
     const show = (key: string, cls: string, text: string, x: number, y: number) => {
       const el = this.tag(key, cls);
@@ -67,6 +72,12 @@ export class MapLabels {
       if (subs > 0 && !actor.removed) show(`sub-${actor.id}`, 'tag sub', t('map.sub', { n: subs }), (firstIntern.x + 0.2) * TILE, firstIntern.y * TILE + 1);
     }
     if (director.courier.isVisible) show('courier', 'tag', t('map.courier'), director.courier.x * TILE + TILE / 2, director.courier.y * TILE + TILE);
+    for (const pop of coinPops) {
+      const actor = director.actors.get(pop.agentId);
+      if (!actor) continue;
+      const box = actorBox(actor);
+      show(`coin-${pop.id}`, 'coin-pop', `+${pop.amount}`, box.x + DOLL_W / 2, box.y + COIN_POP_Y);
+    }
     for (const [key, el] of this.tags) if (!seen.has(key)) el.hidden = true;
   }
 

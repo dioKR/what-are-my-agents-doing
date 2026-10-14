@@ -239,3 +239,45 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .chip.pending { color: var(--muted); }
 .chip.in_progress { color: #1b1608; background: var(--amber); border-color: var(--amber); }
 .chip.completed { color: #0f2014; background: var(--good); border-color: var(--good); }
+
+/* ---------- 꾸미기 상점 ---------- */
+/* 픽셀 동전: 노란 원에 진한 테두리와 가운데 홈 */
+.coin-icon { display: inline-block; width: 12px; height: 12px; flex: none; background:
+  radial-gradient(circle at 50% 50%, #fff3b0 0 1.5px, transparent 2px),
+  radial-gradient(circle at 50% 50%, #ffd34d 0 4.5px, #b8860b 4.5px 6px, transparent 6px); image-rendering: pixelated; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.coin-button { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 10px; background: var(--panel); color: var(--text); border: 2px solid var(--line); font: 14px var(--pixel); cursor: pointer; }
+.coin-button:hover { border-color: var(--amber); color: var(--amber); }
+.coin-button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+.shop { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 18px 20px; background: var(--panel); color: var(--text); border: 3px solid var(--line); box-shadow: 6px 6px 0 rgba(0, 0, 0, .45); }
+.shop::backdrop { background: rgba(8, 10, 14, .62); }
+.shop-head { display: flex; align-items: center; gap: 12px; }
+.shop-head h2 { margin: 0; font: 20px var(--pixel); flex: 1; }
+.shop-coins { display: inline-flex; align-items: center; gap: 6px; font: 18px var(--pixel); color: var(--amber); }
+.shop-for { margin: 8px 0; color: var(--muted); font-size: 13px; }
+.shop-picker { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; }
+.shop-pick { display: flex; align-items: center; gap: 6px; flex: none; max-width: 150px; padding: 3px 8px 3px 3px; background: var(--panel-2); color: var(--text); border: 2px solid var(--line); cursor: pointer; font: 12px var(--body); }
+.shop-pick img { width: 26px; height: 22px; image-rendering: pixelated; }
+.shop-pick span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shop-pick.on { border-color: var(--amber); }
+.shop-tabs { margin: 10px 0; }
+.shop-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
+.shop-card { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 10px 8px; background: var(--panel-2); border: 2px solid var(--line); text-align: center; font-size: 13px; }
+.shop-card.worn { border-color: var(--amber); }
+.shop-preview { image-rendering: pixelated; height: 88px; width: auto; }
+.shop-preview.pet { height: 56px; margin: 16px 0; }
+.shop-price { display: inline-flex; align-items: center; gap: 4px; color: var(--amber); font-family: var(--pixel); }
+.shop-owned { color: var(--good); font-size: 12px; }
+.shop-foot { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-top: 16px; }
+.shop-foot h3 { margin: 0 0 6px; font: 14px var(--pixel); }
+.shop-rules, .shop-recent { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.shop-rules li, .shop-recent li { display: flex; gap: 8px; justify-content: space-between; }
+.shop-recent li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; }
+.shop-rules b, .shop-recent b { color: var(--amber); }
+.shop .muted { color: var(--muted); font-size: 12px; }
+
+/* 코인을 번 캐릭터 머리 위로 떠오르는 "+코인" */
+.coin-pop { position: absolute; transform: translate(-50%, -100%); font: 13px var(--pixel); color: #ffd34d; text-shadow: 1px 1px 0 #3a2a00, -1px 0 0 #3a2a00, 0 -1px 0 #3a2a00; pointer-events: none; animation: coin-pop 1.6s ease-out forwards; }
+@keyframes coin-pop { from { opacity: 1; margin-top: 0; } 70% { opacity: 1; } to { opacity: 0; margin-top: -26px; } }
+@media (prefers-reduced-motion: reduce) { .coin-pop { animation: none; } }

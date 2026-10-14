@@ -120,6 +120,15 @@ function drawGlasses(grid: Grid, eyes: Box[]): void {
   }
 }
 
+/** 선글라스: 눈 자리를 검은 알로 덮고 테와 다리를 두른 뒤 왼쪽 위에 반사 한 점 */
+function drawSunglasses(grid: Grid, eyes: Box[]): void {
+  drawGlasses(grid, eyes);
+  for (const e of eyes) {
+    for (let y = e.y; y < e.y + e.h; y++) for (let x = e.x; x < e.x + e.w; x++) grid[TOP + y][x] = 'i';
+    grid[TOP + e.y][e.x] = 'l';
+  }
+}
+
 /** 손으로 찍은 캐릭터 한 장. 오른쪽은 왼쪽 모습을 뒤집어 그린다. */
 export function composeCharacter(art: CharacterArt, look: DollLook, facing: Facing, pose: Pose, expression: Expression): HTMLCanvasElement {
   const view: View = facing === 'right' ? 'left' : facing;
@@ -139,6 +148,7 @@ export function composeCharacter(art: CharacterArt, look: DollLook, facing: Faci
   const acc = accessoryLayer(art, view, look.accessory);
   if (acc) stamp(grid, acc.rows, acc.top);
   if (look.accessory === 'glasses' && view !== 'up') drawGlasses(grid, art.eyes[view]);
+  if (look.accessory === 'sunglasses' && view !== 'up') drawSunglasses(grid, art.eyes[view]);
   if (view !== 'up') drawArms();
   if (expression === 'panic' && view !== 'up') stamp(grid, SWEAT, 2);
 

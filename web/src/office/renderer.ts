@@ -7,6 +7,7 @@ import { DOLL_FOOT_Y, DOLL_H, DOLL_W, dollFrame, type Expression, type Facing, t
 import { drawIcon, drawLetter, drawParcel, type IconKey } from './props.ts';
 import { drawLighting, type Ambient, type LightSource } from './lighting.ts';
 import type { Actor, ActorDirector } from './actors.ts';
+import { drawPet, petDepth, type Pet } from './pets/pets.ts';
 
 const FOOT_Y = DOLL_FOOT_Y;
 /** 걷기 4박자: 왼발 → 모음(몸이 1px 뜸) → 오른발 → 모음 */
@@ -42,6 +43,8 @@ export interface RenderInput {
   time: number;
   reduceMotion: boolean;
   ambient: Ambient;
+  /** 캐릭터를 따라다니는 펫들 */
+  pets: Iterable<Pet>;
 }
 
 /** 캐릭터 그림의 왼쪽 위 좌표 (지도 픽셀 단위). 이름표·말풍선·클릭 판정도 이 값을 쓴다. */
@@ -95,6 +98,7 @@ export function renderOffice(input: RenderInput): void {
       if (courier.carrying) drawParcel(g, x + 5, y - 7 - beat.lift);
     } });
   }
+  for (const pet of input.pets) drawables.push({ depth: petDepth(pet), draw: () => drawPet(g, pet, time, input.reduceMotion) });
   drawables.sort((a, b) => a.depth - b.depth).forEach((d) => d.draw());
   drawFlights(g, director);
 

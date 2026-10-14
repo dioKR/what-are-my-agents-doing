@@ -9,6 +9,8 @@ import { applyClaudeHook, isClaudeHookPayload, type ClaudeHookPayload } from './
 import { ACTIVE_WINDOW_MS, watchTranscripts } from './transcriptWatcher.ts';
 import { routeEvent } from './team.ts';
 import { readContextUsedRatio } from './transcript.ts';
+import { buy, earn, equip, rewardsFor, WalletStore, type ShopResult } from './wallet.ts';
+import type { RewardReason, ShopSlot } from '../shared/shop.ts';
 
 const HOST = '127.0.0.1';
 const MAX_BODY_BYTES = 1024 * 1024;
@@ -17,6 +19,9 @@ const STALE_AGENT_MS = ACTIVE_WINDOW_MS;
 const CONTEXT_REFRESH_MS = 2_000;
 /** 화면 파일(vite build 결과) 폴더. startServer()가 정한다 */
 let webRoot = '';
+const wallet = new WalletStore();
+/** 서버를 켠 시각. 이보다 앞선 기록(켤 때 몰아 읽는 지난 대화)으로는 코인을 주지 않는다 */
+let startedAt = Date.now();
 
 const agents = new Map<string, AgentSnapshot>();
 const transcriptPaths = new Map<string, string>();
@@ -57,6 +62,7 @@ async function refreshContext(id: string, now: number): Promise<void> {
 function applyEvents(events: ClaudeHookPayload[], source: 'hook' | 'transcript'): void {
   const now = Date.now();
   const changed = new Map<string, AgentSnapshot>();
+  const rewards = new Map<string, RewardReason[]>();
   for (const event of events) {
     const route = routeEvent(event);
     if (!route) continue;
@@ -69,6 +75,8 @@ function applyEvents(events: ClaudeHookPayload[], source: 'hook' | 'transcript')
     changed.set(route.key, route.member
       ? { ...next, id: route.key, parentId: route.member.parentId, role: route.member.role ?? next.role, memberName: route.member.memberName ?? next.memberName }
       : next);
+    const isLive = (event.observed_at ?? now) >= startedAt;
+    if (isLive) rewards.set(route.key, [...(rewards.get(route.key) ?? []), ...rewardsFor(prev, next, event)]);
   }
   for (const next of changed.values()) {
     // 기록 파일은 최근에 바뀌었어도 마지막 실제 활동이 오래전이면 보여주지 않는다
@@ -77,6 +85,29 @@ function applyEvents(events: ClaudeHookPayload[], source: 'hook' | 'transcript')
     if (next.activity === 'ended') setTimeout(() => remove(next.id), ENDED_AGENT_LINGER_MS);
     void refreshContext(next.id, now);
   }
+  for (const [id, reasons] of rewards) payCoins(id, reasons, now);
+}
+
+/** 번 코인을 지갑에 넣고, 화면에 지갑과 "+코인"을 알린다 */
+function payCoins(agentId: string, reasons: RewardReason[], now: number): void {
+  if (!reasons.length) return;
+  const agent = agents.get(agentId);
+  const who = agent?.title ?? agent?.memberName ?? agent?.cwd.split(/[\\/]/).pop() ?? agentId;
+  const result = earn(wallet.state, agentId, who, reasons, now);
+  wallet.set(result.state);
+  broadcast({ type: 'wallet', wallet: wallet.state });
+  broadcast({ type: 'reward', agentId, amount: result.earned.reduce((sum, e) => sum + e.amount, 0) });
+}
+
+/** 상점 요청(사기·입히기)을 처리하고 결과를 돌려준다 */
+function applyShopResult(result: ShopResult, res: ServerResponse): void {
+  if (!result.ok) {
+    res.writeHead(400, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: result.error }));
+    return;
+  }
+  wallet.set(result.state);
+  broadcast({ type: 'wallet', wallet: wallet.state });
+  res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(wallet.state));
 }
 
 function handleHookEvent(body: unknown): void {
@@ -98,6 +129,7 @@ async function readJsonBody(req: IncomingMessage): Promise<unknown> {
 function openStream(req: IncomingMessage, res: ServerResponse): void {
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   res.write(`data: ${JSON.stringify({ type: 'snapshot', protocol: PROTOCOL_VERSION, agents: [...agents.values()] } satisfies ServerMessage)}\n\n`);
+  res.write(`data: ${JSON.stringify({ type: 'wallet', wallet: wallet.state } satisfies ServerMessage)}\n\n`);
   listeners.add(res);
   req.on('close', () => listeners.delete(res));
 }
@@ -127,6 +159,15 @@ const handleRequest = async (req: IncomingMessage, res: ServerResponse): Promise
       res.writeHead(204).end();
     } else if (req.method === 'GET' && url.pathname === '/api/stream') {
       openStream(req, res);
+    } else if (req.method === 'POST' && url.pathname === '/api/shop/buy') {
+      const body = (await readJsonBody(req)) as { itemId?: string };
+      applyShopResult(buy(wallet.state, String(body.itemId ?? '')), res);
+    } else if (req.method === 'POST' && url.pathname === '/api/shop/equip') {
+      const body = (await readJsonBody(req)) as { key?: string; slot?: ShopSlot; itemId?: string | null };
+      if (!body.key || (body.slot !== 'head' && body.slot !== 'pet')) { res.writeHead(400).end(); return; }
+      applyShopResult(equip(wallet.state, body.key, body.slot, body.itemId ?? null), res);
+    } else if (req.method === 'GET' && url.pathname === '/api/wallet') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(wallet.state));
     } else if (req.method === 'GET' && url.pathname === '/api/agents') {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify([...agents.values()]));
     } else if (req.method === 'GET') {
@@ -149,8 +190,10 @@ export interface StartOptions {
  * 서버를 켜고 대화 기록 읽기를 시작한다. 켜지면 화면 주소를 돌려준다.
  * 포트를 이미 다른 프로그램이 쓰고 있으면 실패한다 (error.code === 'EADDRINUSE').
  */
-export function startServer(options: StartOptions): Promise<string> {
+export async function startServer(options: StartOptions): Promise<string> {
   webRoot = options.webRoot;
+  startedAt = Date.now();
+  await wallet.load();
   const server = createServer((req, res) => void handleRequest(req, res));
   return new Promise((resolve, reject) => {
     server.once('error', reject);

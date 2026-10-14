@@ -2,6 +2,7 @@
 // - 손으로 찍은 그림이 있는 기본 캐릭터(look.character)는 그 그림(sprites/)을 쓴다.
 // - 꾸미기로 머리 모양·옷을 바꾼 캐릭터는 아래의 부품 조립 방식으로 그린다 (24×36을 그려 32×44 도화지에 발을 맞춰 얹는다).
 import { PixelSheet, shade } from './pixelSheet.ts';
+import type { HeadItem } from '../../../../shared/shop.ts';
 import { composeCharacter, SPRITE_FOOT_Y, SPRITE_H, SPRITE_W } from './sprites/compose.ts';
 import { CHARACTER_ART } from './sprites/index.ts';
 
@@ -26,7 +27,8 @@ export type Outfit = 'blouseSkirt' | 'shirtTie' | 'tee' | 'hoodie' | 'staffTee';
 export type EyeStyle = 'round' | 'heart';
 /** 얼굴에 붙는 작은 장식 (머리 소품과 함께 쓸 수 있다) */
 export type FaceMark = 'none' | 'bandage' | 'earrings';
-export type Accessory = 'none' | 'beret' | 'headphones' | 'cap' | 'glasses' | 'ribbon' | 'starclip' | 'sprout' | 'mailcap' | 'crown';
+/** 상점에서 사는 머리 장식(HeadItem)도 소품 자리에 쓴다. 부품 조립 그림은 이것들을 그리지 않는다 */
+export type Accessory = 'none' | 'beret' | 'headphones' | 'cap' | 'glasses' | 'ribbon' | 'starclip' | 'sprout' | 'mailcap' | 'crown' | HeadItem;
 
 export interface DollLook {
   skin: string;

@@ -117,6 +117,22 @@ From the fifth agent on, the same four characters are reused with different hair
 
 ---
 
+## Dress-up shop
+
+Your agents earn coins by working, and you spend them on headwear and pets for their characters. There's no real money involved.
+
+| What an agent did | Coins |
+|---|---|
+| Finished a turn of work | +1 |
+| Completed a todo | +3 |
+| Completed an agent team task | +5 |
+| Opened a PR | +10 |
+
+- Click the coin counter at the top right to open the shop. Pick a character at the top of the shop, then buy and put on items.
+- Headwear: heart headband, sunglasses, cat ears, flower crown, party hat, Santa hat. Pets: chick, slime, cat, dog. Pets follow their character around.
+- Only work done while the app or server is running earns coins (old history read at startup doesn't count). A "+coins" pops up over the character when it earns.
+- The wallet is saved in `~/.wamad/wallet.json`, so it survives restarts and works the same in the desktop app and from the terminal.
+
 ## Team and meeting room
 
 ![The team gathered in the meeting room, with the Team tab](docs/images/team.png)

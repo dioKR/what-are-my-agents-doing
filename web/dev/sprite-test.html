@@ -25,5 +25,9 @@ for (const f of ['down', 'up', 'left', 'right']) line(f, ['stand', 'walk1', 'wal
 line('표정', ['normal', 'blink', 'happy', 'focus', 'panic', 'sleepy'].flatMap((e) => [composeCharacter(art, look, 'down', 'stand', e), composeCharacter(art, look, 'left', 'stand', e)]));
 line('소품', ['crown', 'glasses', 'ribbon', 'beret', 'cap', 'headphones', 'starclip', 'sprout', 'mailcap'].map((a) => composeCharacter(art, { ...look, accessory: a }, 'down', 'stand', 'normal')));
 line('소품 옆', ['crown', 'glasses', 'ribbon', 'beret', 'cap', 'starclip', 'mailcap'].map((a) => composeCharacter(art, { ...look, accessory: a }, 'left', 'stand', 'normal')));
+const SHOP = ['heartBand', 'sunglasses', 'catEars', 'flowerCrown', 'partyHat', 'santaHat'];
+line('상점', SHOP.map((a) => composeCharacter(art, { ...look, accessory: a }, 'down', 'stand', 'normal')));
+line('상점 옆', SHOP.map((a) => composeCharacter(art, { ...look, accessory: a }, 'left', 'stand', 'normal')));
+line('상점 뒤', SHOP.map((a) => composeCharacter(art, { ...look, accessory: a }, 'up', 'stand', 'normal')));
 for (const f of ['down', 'left', 'up']) for (const p of ['stand', 'walk1', 'stand', 'walk2']) document.getElementById('floor').append(big(composeCharacter(art, look, f, p, 'normal'), 2));
 </script></body></html>

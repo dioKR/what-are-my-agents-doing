@@ -35,6 +35,13 @@ export const lt = (text: LocalText | { ko: string; en: string }): string => text
 
 const KO = {
   'app.title': '내 에이전트들은 뭘 하고 있을까?',
+  'shop.open': '꾸미기 상점', 'shop.title': '꾸미기 상점', 'shop.close': '닫기',
+  'shop.for': '{name}에게 입히기', 'shop.pick': '지도에서 캐릭터를 고르면 바로 입힐 수 있어요. 지금은 사기만 할 수 있습니다.',
+  'shop.tab.head': '머리 장식', 'shop.tab.pet': '펫',
+  'shop.buy': '사기 · {price}', 'shop.owned': '가지고 있음', 'shop.wear': '입히기', 'shop.takeOff': '벗기기', 'shop.bring': '데리고 다니기', 'shop.leave': '두고 가기',
+  'shop.howToEarn': '코인 버는 법', 'shop.liveOnly': '앱을 켜 둔 동안 에이전트가 한 일만 코인이 됩니다.',
+  'shop.reason.turn': '일을 하다가 한 턴을 마침', 'shop.reason.todo': '할 일 하나 끝냄', 'shop.reason.teamTask': '팀 할 일 하나 끝냄', 'shop.reason.pr': 'PR을 올림',
+  'shop.recent': '최근에 번 코인', 'shop.noRecent': '아직 번 코인이 없습니다. 에이전트에게 일을 시켜 보세요.',
   'app.connecting': '서버에 연결하는 중… (wamad 또는 npm start)',
   'app.connected': '서버 연결됨 · 에이전트 {n}명',
   'settings.open': '설정', 'settings.title': '설정', 'settings.time': '시간대', 'settings.lang': '언어',
@@ -73,6 +80,13 @@ type Key = keyof typeof KO;
 
 const EN: Record<Key, string> = {
   'app.title': 'What Are My Agents Doing?',
+  'shop.open': 'Dress-up shop', 'shop.title': 'Dress-up shop', 'shop.close': 'Close',
+  'shop.for': 'Dressing {name}', 'shop.pick': 'Pick a character on the map to dress it. For now you can only buy.',
+  'shop.tab.head': 'Headwear', 'shop.tab.pet': 'Pets',
+  'shop.buy': 'Buy · {price}', 'shop.owned': 'Owned', 'shop.wear': 'Wear', 'shop.takeOff': 'Take off', 'shop.bring': 'Bring along', 'shop.leave': 'Leave behind',
+  'shop.howToEarn': 'How agents earn coins', 'shop.liveOnly': 'Only work your agents do while this is running earns coins.',
+  'shop.reason.turn': 'Finished a turn of work', 'shop.reason.todo': 'Completed a todo', 'shop.reason.teamTask': 'Completed a team task', 'shop.reason.pr': 'Opened a PR',
+  'shop.recent': 'Recently earned', 'shop.noRecent': 'No coins yet. Give your agents some work.',
   'app.connecting': 'Connecting to the server… (wamad or npm start)',
   'app.connected': 'Connected · {n} agents',
   'settings.open': 'Settings', 'settings.title': 'Settings', 'settings.time': 'Time of day', 'settings.lang': 'Language',
