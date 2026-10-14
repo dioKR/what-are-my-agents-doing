@@ -1,4 +1,5 @@
 // 서버와 화면이 함께 쓰는 약속. 여기 모양이 바뀌면 양쪽이 같이 바뀌어야 한다.
+import type { RecordsState } from './records.ts';
 import type { WalletState } from './shop.ts';
 
 export const SERVER_PORT = 4545;
@@ -126,7 +127,7 @@ const BROADCAST_RECIPIENTS = new Set(['*', 'all', 'everyone', 'team']);
 export const isBroadcastRecipient = (to: string): boolean => BROADCAST_RECIPIENTS.has(to.trim().toLowerCase());
 
 /** 서버와 화면이 주고받는 모양의 판 번호. 모양을 바꾸면 올린다 (예전 화면이 열려 있으면 스스로 새로고침한다) */
-export const PROTOCOL_VERSION = 3;
+export const PROTOCOL_VERSION = 4;
 
 export type ServerMessage =
   | { type: 'snapshot'; protocol: number; agents: AgentSnapshot[] }
@@ -135,7 +136,9 @@ export type ServerMessage =
   /** 지갑(코인·산 물건·착용)이 바뀌었다 */
   | { type: 'wallet'; wallet: WalletState }
   /** 에이전트가 일해서 코인을 벌었다 (캐릭터 머리 위에 +코인을 띄운다) */
-  | { type: 'reward'; agentId: string; amount: number };
+  | { type: 'reward'; agentId: string; amount: number }
+  /** 기록실(최고 기록 · 누적 작업량)이 바뀌었다 */
+  | { type: 'records'; records: RecordsState };
 
 /** 같은 실패가 이 횟수 이상 이어지면 'stuck'으로 본다 */
 export const STUCK_FAIL_STREAK = 5;

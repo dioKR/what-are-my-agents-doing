@@ -91,6 +91,23 @@ test('설정에서 언어를 바꾸면 제목이 바뀐다', async () => {
   assert.equal(await page.textContent('h1'), 'What Are My Agents Doing?');
 });
 
+test('기록실: 요청을 받고 도구를 써서 끝낸 작업이 기록에 남는다', async () => {
+  if (await page.locator('dialog[open]').count()) await page.keyboard.press('Escape');
+  await hook('gamma', { hook_event_name: 'UserPromptSubmit', prompt: '기록 남겨 줘' });
+  await hook('gamma', { hook_event_name: 'PreToolUse', tool_name: 'Edit', tool_input: { file_path: '/work/gamma/a.ts' } });
+  await new Promise((resolve) => setTimeout(resolve, 1100));
+  await hook('gamma', { hook_event_name: 'Stop' });
+  await page.click('[data-records-open]');
+  await page.waitForSelector('dialog.records[open] .record-card');
+  await page.waitForSelector('dialog.records .record-request:has-text("기록 남겨 줘")');
+  const records = await (await fetch(`${url}/api/records`)).json();
+  assert.equal(records.totals.turns, 1);
+  assert.ok(records.peakBusy.count >= 1);
+  mkdirSync('e2e-artifacts', { recursive: true });
+  await page.locator('dialog.records').screenshot({ path: 'e2e-artifacts/records.png' });
+  await page.click('[data-records-close]');
+});
+
 test('지금까지 브라우저 오류가 없다', () => {
   assert.deepEqual(pageErrors, []);
 });
