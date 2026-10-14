@@ -26,7 +26,15 @@
 
 ---
 
-## 빠른 시작
+## 데스크톱 앱 (터미널 필요 없음)
+
+홈페이지에서 내려받으세요: **https://dioKR.github.io/what-are-my-agents-doing/**
+
+- macOS(Apple Silicon / Intel)와 Windows용이 있습니다.
+- 아직 서명하지 않은 앱이라 처음 열 때 경고가 뜹니다. 여는 방법은 홈페이지에 있습니다.
+- 메뉴 막대에 머뭅니다: 화면 열기, Claude Code와 연결(버튼 하나로 훅 설치), 로그인할 때 자동 실행, 끄기.
+
+## 빠른 시작 (소스에서 실행)
 
 Node.js 23.6 이상이 필요합니다. TypeScript 파일을 빌드 없이 그대로 실행하기 때문입니다.
 
@@ -183,6 +191,8 @@ wamad hooks uninstall           # 훅 빼기
 - 이미 있던 훅은 건드리지 않습니다.
 - 바꾸기 전에 `settings.json.wamad-backup`으로 백업합니다.
 - 훅 스크립트([`hooks/claude-hook.mjs`](hooks/claude-hook.mjs))는 받은 내용을 로컬 서버로 넘기기만 하고 아무것도 출력하지 않습니다.
+desktop/main.mjs          데스크톱 앱(Electron): 메뉴 막대 아이콘, 창, Claude Code 연결
+docs/index.html           홈페이지 (GitHub Pages)
 - 서버가 꺼져 있어도 0.5초 안에 조용히 끝나므로 Claude Code를 막지 않습니다.
 - 설치 후 새로 시작한 Claude Code 세션부터 훅이 적용됩니다.
 
@@ -226,7 +236,11 @@ npm run server      # 로컬 서버 (4545)
 npm run dev         # 화면 개발 서버 (Vite). /api 요청은 4545로 넘긴다
 npm test            # 서버 쪽 테스트
 npm run typecheck
+npm run desktop       # 데스크톱 앱(Electron)을 소스에서 실행
+npm run dist:desktop  # 설치 파일을 release/ 에 만들기
 ```
+
+`v`로 시작하는 태그를 올리면 GitHub Actions가 macOS·Windows 설치 파일을 만들어 GitHub Release에 붙입니다. 홈페이지는 `docs/`에 있습니다(GitHub Pages).
 
 - 모든 캐릭터 조합 보기: `npm run dev`를 켠 뒤 http://localhost:5173/dev/dolls.html
 - 기본 캐릭터 네 명 보기: http://localhost:5173/dev/cast.html
@@ -236,7 +250,8 @@ npm run typecheck
 ```
 shared/protocol.ts        서버와 화면이 함께 쓰는 상태 모양 (AgentSnapshot)
 server/
-  index.ts                127.0.0.1 전용 HTTP 서버 + 실시간 전송(SSE)
+  app.ts                  127.0.0.1 전용 HTTP 서버 + 실시간 전송(SSE). startServer()로 켠다
+  index.ts                명령줄에서 서버 켜기
   claudeHook.ts           훅 이벤트 → 에이전트 상태 (순수 함수)
   claudeTranscript.ts     대화 기록 한 줄 → 훅과 같은 모양의 이벤트
   transcriptWatcher.ts    ~/.claude/projects 대화 기록을 2초마다 이어 읽기

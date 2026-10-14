@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>앱 아이콘용 얼굴</title></head>
+<body><canvas id="out"></canvas>
+<script type="module">
+// 분홍 머리 사원의 웃는 얼굴(머리 부분)만 원래 픽셀 그대로 잘라 둔다. 앱 아이콘을 만들 때 쓴다
+import { dollFrame } from '../src/office/character/doll.ts';
+import { PRESETS } from '../src/office/look.ts';
+const frame = dollFrame(PRESETS[0].look, 'down', 'stand', 'happy');
+const out = document.getElementById('out');
+out.width = 32; out.height = 28;
+out.getContext('2d').drawImage(frame, 0, 2, 32, 28, 0, 0, 32, 28);
+window.iconData = out.toDataURL('image/png');
+</script></body></html>

@@ -1,0 +1,43 @@
+# v로 시작하는 태그(예: v0.1.0)를 올리면 맥·윈도우 설치 파일을 만들어 GitHub Releases에 올린다.
+# 서명하지 않은 빌드다 (맥: 확인되지 않은 개발자 경고, 윈도우: SmartScreen 경고가 뜬다).
+name: Release desktop app
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create the release for this tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes "Download the app for your computer below. See https://dioKR.github.io/what-are-my-agents-doing/ for how to open it the first time."
+
+  build:
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build && npm run build:server
+      - name: Build and upload installers
+        run: npx electron-builder --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'

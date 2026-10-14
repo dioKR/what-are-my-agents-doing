@@ -26,7 +26,15 @@ You can tell who is doing what at a glance.
 
 ---
 
-## Quick start
+## Desktop app (no terminal needed)
+
+Download it from the homepage: **https://dioKR.github.io/what-are-my-agents-doing/**
+
+- macOS (Apple Silicon / Intel) and Windows.
+- The app isn't signed yet, so your computer warns you the first time you open it. The homepage shows how to open it.
+- It lives in the menu bar: open the office, connect to Claude Code (installs the hooks with one click), open at login, quit.
+
+## Quick start (from source)
 
 Requires Node.js 23.6 or later, because it runs the TypeScript files directly without a build step.
 
@@ -183,6 +191,8 @@ Installing the hooks is designed to be safe:
 - Your existing hooks are kept.
 - `settings.json` is backed up to `settings.json.wamad-backup` before any change.
 - The hook script ([`hooks/claude-hook.mjs`](hooks/claude-hook.mjs)) only forwards what it receives to the local server and prints nothing.
+desktop/main.mjs          desktop app (Electron): menu bar icon, window, Claude Code connect
+docs/index.html           homepage (GitHub Pages)
 - It exits within 0.5 seconds even if the server is down, so it never blocks Claude Code.
 - Hooks apply to Claude Code sessions started after installing.
 
@@ -226,7 +236,11 @@ npm run server      # local server (4545)
 npm run dev         # UI dev server (Vite); /api is proxied to 4545
 npm test            # server tests
 npm run typecheck
+npm run desktop       # run the desktop app (Electron) from source
+npm run dist:desktop  # build installers into release/
 ```
+
+Pushing a `v*` tag builds the macOS and Windows installers on GitHub Actions and attaches them to a GitHub Release. The homepage lives in `docs/` (GitHub Pages).
 
 - Every character combination: run `npm run dev`, then open http://localhost:5173/dev/dolls.html
 - The four default characters: http://localhost:5173/dev/cast.html
@@ -236,7 +250,8 @@ npm run typecheck
 ```
 shared/protocol.ts        State shape shared by server and UI (AgentSnapshot)
 server/
-  index.ts                127.0.0.1-only HTTP server + live updates (SSE)
+  app.ts                  127.0.0.1-only HTTP server + live updates (SSE), started by startServer()
+  index.ts                starts the server from the command line
   claudeHook.ts           hook event → agent state (pure function)
   claudeTranscript.ts     transcript line → hook-shaped events
   transcriptWatcher.ts    tails ~/.claude/projects transcripts every 2 seconds

@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>What Are My Agents Doing?</title>
+  <meta name="description" content="See which of your Claude Code agents are working, at a glance, as a pixel-art office.">
+  <link rel="icon" href="images/icon.png" type="image/png">
+  <meta property="og:title" content="What Are My Agents Doing?">
+  <meta property="og:description" content="See which of your Claude Code agents are working, at a glance, as a pixel-art office.">
+  <meta property="og:image" content="https://dioKR.github.io/what-are-my-agents-doing/images/overview.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Gowun+Dodum&display=swap">
+  <style>
+    :root {
+      --bg: #15181d; --panel: #1f242b; --line: #3a414b; --text: #ece8de; --muted: #a2a9b3;
+      --amber: #ffcf5a; --pink: #ff6fae; --cyan: #5fd6ff;
+      --pixel: 'DotGothic16', monospace; --body: 'Gowun Dodum', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--body); line-height: 1.6; }
+    a { color: var(--cyan); }
+    img { image-rendering: pixelated; max-width: 100%; display: block; }
+    .wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+
+    header.top { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; }
+    header.top .brand { display: flex; align-items: center; gap: 10px; font-family: var(--pixel); font-size: 18px; color: var(--text); text-decoration: none; }
+    header.top .brand img { width: 32px; height: 32px; }
+    .lang { display: flex; border: 2px solid var(--line); }
+    .lang button { font: 13px var(--body); background: var(--panel); color: var(--muted); border: 0; padding: 4px 10px; cursor: pointer; }
+    .lang button[aria-pressed="true"] { background: var(--amber); color: #1b1608; }
+
+    .hero { text-align: center; padding: 24px 0 40px; }
+    .hero h1 { font-family: var(--pixel); font-size: clamp(30px, 6vw, 52px); line-height: 1.15; margin: 8px 0 12px; }
+    .hero .tagline { color: var(--muted); font-size: 18px; max-width: 640px; margin: 0 auto 28px; }
+    .hero .dance { width: min(420px, 100%); margin: 0 auto 8px; border: 3px solid var(--line); }
+    .hero .caption { color: var(--muted); font-size: 13px; margin: 0 0 28px; }
+
+    .download { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
+    .btn { display: inline-flex; align-items: center; gap: 10px; font: 18px var(--pixel); padding: 14px 26px; text-decoration: none; border: 3px solid #1b1608; box-shadow: 4px 4px 0 #000; }
+    .btn.primary { background: var(--amber); color: #1b1608; }
+    .btn.primary:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 #000; }
+    .btn:focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; }
+    .others { font-size: 14px; color: var(--muted); }
+    .others a { margin: 0 6px; }
+    .note { font-size: 13px; color: var(--muted); }
+
+    section { padding: 40px 0; border-top: 2px solid var(--panel); }
+    h2 { font-family: var(--pixel); font-size: 26px; margin: 0 0 18px; }
+    .shot { border: 3px solid var(--line); }
+    .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+    .feature { background: var(--panel); border: 2px solid var(--line); padding: 14px 16px; }
+    .feature b { display: block; font-family: var(--pixel); font-weight: 400; color: var(--amber); margin-bottom: 4px; }
+    .feature p { margin: 0; color: var(--muted); font-size: 15px; }
+
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
+    .steps article { background: var(--panel); border: 2px solid var(--line); padding: 16px 18px; }
+    .steps h3 { margin: 0 0 8px; font-family: var(--pixel); font-weight: 400; font-size: 18px; }
+    .steps ol { margin: 0; padding-left: 20px; }
+    .steps li { margin: 4px 0; }
+    code { font-family: ui-monospace, monospace; background: #0f1216; padding: 1px 6px; font-size: 0.92em; word-break: break-all; }
+    pre { background: #0f1216; padding: 12px 14px; overflow-x: auto; border: 2px solid var(--line); }
+    pre code { background: none; padding: 0; }
+    footer { padding: 30px 0 50px; color: var(--muted); font-size: 14px; text-align: center; border-top: 2px solid var(--panel); }
+
+    /* 한 언어만 보이게: html[lang]에 맞는 글만 남긴다 */
+    html[lang="en"] [lang="ko"], html[lang="ko"] [lang="en"] { display: none !important; }
+    html[lang="ko"] body { word-break: keep-all; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="brand" href="https://github.com/dioKR/what-are-my-agents-doing"><img src="images/icon.png" alt="" width="32" height="32">wamad</a>
+      <div class="lang" role="group" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="true">English</button>
+        <button type="button" data-lang="ko" aria-pressed="false">한국어</button>
+      </div>
+    </header>
+
+    <main>
+      <div class="hero">
+        <h1>What Are My Agents Doing?</h1>
+        <p class="tagline">
+          <span lang="en">See which of your Claude Code agents are working, at a glance. Every agent becomes a little character in a pixel-art office.</span>
+          <span lang="ko">내 Claude Code 에이전트들이 지금 뭘 하는지 한눈에. 에이전트 하나하나가 픽셀 회사의 작은 캐릭터가 됩니다.</span>
+        </p>
+        <img class="dance" src="images/dance.gif" width="420" alt="Agents dancing in the hidden ??? room">
+        <p class="caption">
+          <span lang="en">When an agent's context passes 80%, it sneaks off to the hidden ??? room to dance.</span>
+          <span lang="ko">컨텍스트가 80%를 넘은 에이전트는 몰래 숨은 ??? 방에 가서 춤춥니다.</span>
+        </p>
+
+        <div class="download">
+          <a class="btn primary" id="primaryDownload" href="https://github.com/dioKR/what-are-my-agents-doing/releases/latest">
+            <span lang="en">Download</span><span lang="ko">다운로드</span>
+            <span id="primaryLabel"></span>
+          </a>
+          <div class="others">
+            <a href="https://github.com/dioKR/what-are-my-agents-doing/releases/latest/download/wamad-mac-arm64.dmg">macOS (Apple Silicon)</a> ·
+            <a href="https://github.com/dioKR/what-are-my-agents-doing/releases/latest/download/wamad-mac-x64.dmg">macOS (Intel)</a> ·
+            <a href="https://github.com/dioKR/what-are-my-agents-doing/releases/latest/download/wamad-windows-setup.exe">Windows</a>
+          </div>
+          <p class="note">
+            <span lang="en">Free and open source. Runs only on your computer. You need Claude Code on the same computer.</span>
+            <span lang="ko">무료 오픈소스입니다. 내 컴퓨터 안에서만 동작합니다. 같은 컴퓨터에서 Claude Code를 쓰고 있어야 합니다.</span>
+          </p>
+        </div>
+      </div>
+
+      <section>
+        <h2><span lang="en">What you see</span><span lang="ko">무엇이 보이나요</span></h2>
+        <img class="shot" src="images/overview.png" alt="The office map with agents working in each room" lang="en">
+        <img class="shot" src="images/overview.ko.png" alt="방마다 에이전트가 일하는 회사 지도" lang="ko">
+        <div class="features" style="margin-top:18px">
+          <div class="feature"><b lang="en">Dev room</b><b lang="ko">개발실</b><p lang="en">Agents editing files or running commands type at their desks.</p><p lang="ko">파일을 고치거나 명령을 실행하는 에이전트는 책상에서 타이핑합니다.</p></div>
+          <div class="feature"><b lang="en">Library</b><b lang="ko">자료실</b><p lang="en">Agents searching the web walk to the bookshelves.</p><p lang="ko">웹을 찾아보는 에이전트는 책장 앞으로 갑니다.</p></div>
+          <div class="feature"><b lang="en">Nap room</b><b lang="ko">수면실</b><p lang="en">Agents compacting their conversation take a nap.</p><p lang="ko">대화를 요약하는 에이전트는 침대에서 잡니다.</p></div>
+          <div class="feature"><b lang="en">Needs you</b><b lang="ko">나를 기다림</b><p lang="en">A "!" pops up when an agent is waiting for your approval.</p><p lang="ko">승인을 기다리는 에이전트 머리 위에 "!"가 뜹니다.</p></div>
+          <div class="feature"><b lang="en">Links</b><b lang="ko">링크</b><p lang="en">PR links and local servers your agents mention, one click away.</p><p lang="ko">에이전트가 알려 준 PR 주소와 로컬 서버를 바로 눌러 엽니다.</p></div>
+          <div class="feature"><b lang="en">Meeting room</b><b lang="ko">회의실</b><p lang="en">Claude Code agent teams gather here and pass letters to each other.</p><p lang="ko">Claude Code 에이전트 팀이 모여 서로 편지를 주고받습니다.</p></div>
+        </div>
+      </section>
+
+      <section id="first-launch">
+        <h2><span lang="en">Opening it the first time</span><span lang="ko">처음 열 때</span></h2>
+        <p>
+          <span lang="en">The app isn't signed with an Apple or Microsoft certificate yet, so your computer shows a warning the first time. It's safe to open; you only need to do this once.</span>
+          <span lang="ko">아직 Apple·Microsoft 인증서로 서명하지 않은 앱이라 처음 열 때 경고가 뜹니다. 한 번만 아래처럼 열면 다음부터는 그냥 열립니다.</span>
+        </p>
+        <div class="steps">
+          <article>
+            <h3>macOS</h3>
+            <ol lang="en">
+              <li>Open the downloaded <code>.dmg</code> and drag the app into <b>Applications</b>.</li>
+              <li>Open the app. When macOS says it can't verify the developer, click <b>Done</b>.</li>
+              <li>Open <b>System Settings › Privacy &amp; Security</b>, scroll down, and click <b>Open Anyway</b> next to the app.</li>
+              <li>Open the app again and click <b>Open</b>.</li>
+            </ol>
+            <ol lang="ko">
+              <li>내려받은 <code>.dmg</code>를 열고 앱을 <b>응용 프로그램</b> 폴더로 끌어다 놓습니다.</li>
+              <li>앱을 엽니다. "확인할 수 없습니다"라는 창이 뜨면 <b>완료</b>를 누릅니다.</li>
+              <li><b>시스템 설정 › 개인정보 보호 및 보안</b>을 열고 아래로 내려 앱 옆의 <b>그래도 열기</b>를 누릅니다.</li>
+              <li>앱을 다시 열고 <b>열기</b>를 누릅니다.</li>
+            </ol>
+          </article>
+          <article>
+            <h3>Windows</h3>
+            <ol lang="en">
+              <li>Run the downloaded <code>wamad-windows-setup.exe</code>.</li>
+              <li>If "Windows protected your PC" appears, click <b>More info</b>, then <b>Run anyway</b>.</li>
+              <li>The app installs and opens by itself.</li>
+            </ol>
+            <ol lang="ko">
+              <li>내려받은 <code>wamad-windows-setup.exe</code>를 실행합니다.</li>
+              <li>"Windows의 PC 보호" 창이 뜨면 <b>추가 정보</b>를 누르고 <b>실행</b>을 누릅니다.</li>
+              <li>설치가 끝나면 앱이 저절로 열립니다.</li>
+            </ol>
+          </article>
+        </div>
+        <p>
+          <span lang="en">When the app opens, it asks whether to connect to Claude Code. Connecting also shows permission prompts and agent teammates. The app lives in your menu bar, so closing the window keeps it running.</span>
+          <span lang="ko">앱이 열리면 Claude Code와 연결할지 묻습니다. 연결하면 승인 대기와 에이전트 팀원 움직임까지 보입니다. 앱은 메뉴 막대에 머물러서, 창을 닫아도 계속 돌아갑니다.</span>
+        </p>
+      </section>
+
+      <section>
+        <h2><span lang="en">Private by design</span><span lang="ko">내 컴퓨터 안에서만</span></h2>
+        <p>
+          <span lang="en">It only reads Claude Code's local history on your computer and serves the office at 127.0.0.1. Nothing is sent anywhere.</span>
+          <span lang="ko">내 컴퓨터에 있는 Claude Code 기록만 읽고, 화면은 127.0.0.1에서만 열립니다. 밖으로 보내는 것은 없습니다.</span>
+        </p>
+      </section>
+
+      <section>
+        <h2><span lang="en">For developers</span><span lang="ko">개발자라면</span></h2>
+        <p>
+          <span lang="en">Prefer the terminal? Run it from source with Node.js 23.6 or later.</span>
+          <span lang="ko">터미널이 편하다면 Node.js 23.6 이상으로 소스에서 바로 실행할 수 있습니다.</span>
+        </p>
+        <pre><code>git clone https://github.com/dioKR/what-are-my-agents-doing.git
+cd what-are-my-agents-doing
+npm install
+npm link
+wamad</code></pre>
+      </section>
+    </main>
+
+    <footer>
+      <a href="https://github.com/dioKR/what-are-my-agents-doing">GitHub</a> ·
+      <a href="https://github.com/dioKR/what-are-my-agents-doing/releases">Releases</a>
+    </footer>
+  </div>
+
+  <script>
+    // 언어: 고른 언어를 기억하고, 처음이면 브라우저 언어를 따른다
+    const LANG_KEY = 'wamad-site.lang';
+    function readLang() {
+      try { const saved = localStorage.getItem(LANG_KEY); if (saved === 'en' || saved === 'ko') return saved; } catch {}
+      return navigator.language.toLowerCase().startsWith('ko') ? 'ko' : 'en';
+    }
+    function setLang(lang) {
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-lang]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lang === lang)));
+      try { localStorage.setItem(LANG_KEY, lang); } catch {}
+    }
+    document.querySelectorAll('[data-lang]').forEach((b) => b.addEventListener('click', () => setLang(b.dataset.lang)));
+    setLang(readLang());
+
+    // 큰 다운로드 버튼: 방문자의 운영체제에 맞는 설치 파일로 바로 연결한다 (모르면 릴리스 페이지)
+    const DOWNLOADS = {
+      macArm: { file: 'wamad-mac-arm64.dmg', label: 'macOS' },
+      win: { file: 'wamad-windows-setup.exe', label: 'Windows' }
+    };
+    function detectDownload() {
+      const platform = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || navigator.userAgent;
+      if (/win/i.test(platform)) return DOWNLOADS.win;
+      // 요즘 맥은 대부분 Apple Silicon이다. 인텔 맥은 버튼 아래 링크로 받는다
+      if (/mac/i.test(platform)) return DOWNLOADS.macArm;
+      return null;
+    }
+    const target = detectDownload();
+    if (target) {
+      document.getElementById('primaryDownload').href = `https://github.com/dioKR/what-are-my-agents-doing/releases/latest/download/${target.file}`;
+      document.getElementById('primaryLabel').textContent = `· ${target.label}`;
+    }
+  </script>
+</body>
+</html>

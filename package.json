@@ -1,9 +1,19 @@
 {
   "name": "wamad",
   "version": "0.1.0",
-  "description": "What Are My Agents Doing? — 내 컴퓨터에서 돌아가는 코딩 에이전트들을 픽셀 회사로 보여주는 로컬 시각화 도구",
+  "description": "What Are My Agents Doing? — see which of your Claude Code agents are working, at a glance, as a pixel-art office",
+  "author": {
+    "name": "Yehwan Oh",
+    "url": "https://github.com/dioKR"
+  },
+  "homepage": "https://dioKR.github.io/what-are-my-agents-doing/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dioKR/what-are-my-agents-doing.git"
+  },
   "private": true,
   "type": "module",
+  "main": "desktop/main.mjs",
   "bin": {
     "wamad": "bin/wamad.mjs"
   },
@@ -19,11 +29,74 @@
     "test": "node --test \"server/**/*.test.ts\"",
     "hooks:install": "node scripts/install-claude-hooks.mjs",
     "hooks:uninstall": "node scripts/install-claude-hooks.mjs --uninstall",
-    "team:install": "node scripts/install-team.mjs"
+    "team:install": "node scripts/install-team.mjs",
+    "build:server": "esbuild server/app.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/server/app.mjs",
+    "desktop": "npm run build && npm run build:server && electron .",
+    "dist:desktop": "npm run build && npm run build:server && electron-builder --publish never"
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
+    "electron": "^44.7.2",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.2",
     "typescript": "^7.0.2",
     "vite": "^8.3.4"
+  },
+  "build": {
+    "appId": "io.github.diokr.wamad",
+    "productName": "What Are My Agents Doing",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "desktop/**/*",
+      "scripts/claude-hooks-lib.mjs",
+      "package.json"
+    ],
+    "artifactName": "wamad-${os}-${arch}.${ext}",
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ],
+      "category": "public.app-category.developer-tools",
+      "identity": "-",
+      "hardenedRuntime": false
+    },
+    "dmg": {
+      "artifactName": "wamad-mac-${arch}.${ext}"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "artifactName": "wamad-windows-setup.${ext}",
+      "oneClick": true,
+      "perMachine": false
+    },
+    "publish": {
+      "provider": "github",
+      "owner": "dioKR",
+      "repo": "what-are-my-agents-doing",
+      "releaseType": "release"
+    }
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "electron-winstaller@5.4.0": true
   }
 }
