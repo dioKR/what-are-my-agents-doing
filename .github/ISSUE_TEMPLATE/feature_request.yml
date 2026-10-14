@@ -1,0 +1,16 @@
+name: Feature idea
+description: Suggest something new for the office
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: What should happen, and what would it help you with?
+    validations:
+      required: true
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else?
+      description: Sketches, screenshots or similar tools you have in mind.
