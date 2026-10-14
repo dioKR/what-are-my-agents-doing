@@ -1,6 +1,6 @@
 {
-  "name": "wamad",
-  "version": "0.2.0",
+  "name": "what-are-my-agents-doing",
+  "version": "0.2.1",
   "description": "What Are My Agents Doing? — see which of your Claude Code agents are working, at a glance, as a pixel-art office",
   "keywords": [
     "claude-code",
@@ -18,7 +18,7 @@
   "homepage": "https://dioKR.github.io/what-are-my-agents-doing/",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dioKR/what-are-my-agents-doing.git"
+    "url": "git+https://github.com/dioKR/what-are-my-agents-doing.git"
   },
   "type": "module",
   "main": "desktop/main.mjs",
@@ -44,7 +44,7 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit -p .",
-    "test": "node --test \"server/**/*.test.ts\" \"web/src/**/*.test.ts\"",
+    "test": "node --test \"server/**/*.test.ts\" \"web/src/**/*.test.ts\" \"desktop/**/*.test.mjs\"",
     "hooks:install": "node scripts/install-claude-hooks.mjs",
     "hooks:uninstall": "node scripts/install-claude-hooks.mjs --uninstall",
     "team:install": "node scripts/install-team.mjs",
@@ -79,7 +79,8 @@
       "dist/**/*",
       "desktop/**/*",
       "scripts/claude-hooks-lib.mjs",
-      "package.json"
+      "package.json",
+      "!desktop/**/*.test.mjs"
     ],
     "artifactName": "wamad-${os}-${arch}.${ext}",
     "mac": {

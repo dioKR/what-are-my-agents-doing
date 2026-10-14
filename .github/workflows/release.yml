@@ -21,7 +21,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           awk -v v="$VERSION" '$0 == "## " v { found = 1; next } /^## / { found = 0 } found' CHANGELOG.md > notes.md
-          printf '\n---\nDownload the app below, or see https://dioKR.github.io/what-are-my-agents-doing/ (it also shows how to open it the first time). From the terminal: `npx wamad`.\n' >> notes.md
+          printf '\n---\nDownload the app below, or see https://dioKR.github.io/what-are-my-agents-doing/ (it also shows how to open it the first time). From the terminal: `npx what-are-my-agents-doing`.\n' >> notes.md
           gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || \
           gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --notes-file notes.md
 
