@@ -1,10 +1,13 @@
 // 캐릭터 한 장면(방향 × 자세 × 표정)을 그린다.
 // - 손으로 찍은 그림이 있는 기본 캐릭터(look.character)는 그 그림(sprites/)을 쓴다.
 // - 꾸미기로 머리 모양·옷을 바꾼 캐릭터는 아래의 부품 조립 방식으로 그린다 (24×36을 그려 32×44 도화지에 발을 맞춰 얹는다).
+// - 사용자가 올린 캐릭터 시트(look.character = 'sheet:<id>')는 그 PNG에서 장면을 잘라 쓴다. 시트를 못 불러오면 부품 조립 그림으로 대신한다.
 import { PixelSheet, shade } from './pixelSheet.ts';
 import type { HeadItem } from '../../../../shared/shop.ts';
 import { composeCharacter, SPRITE_FOOT_Y, SPRITE_H, SPRITE_W } from './sprites/compose.ts';
 import { CHARACTER_ART } from './sprites/index.ts';
+import { sheetFrame } from './sheets.ts';
+import { sheetIdOf } from '../../../../shared/characterSheet.ts';
 
 export const DOLL_W = SPRITE_W;
 export const DOLL_H = SPRITE_H;
@@ -44,7 +47,7 @@ export interface DollLook {
   accessory: Accessory;
   /** 예전에 저장한 모습에는 없을 수 있다 */
   mark?: FaceMark;
-  /** 손으로 찍은 기본 캐릭터 id. 머리 모양·옷을 바꾸면 비운다 (그때는 부품 조립 방식으로 그린다) */
+  /** 손으로 찍은 기본 캐릭터 id, 또는 올린 캐릭터 시트('sheet:<id>'). 머리 모양·옷을 바꾸면 비운다 (그때는 부품 조립 방식으로 그린다) */
   character?: string;
 }
 
@@ -70,10 +73,17 @@ export function dollFrame(look: DollLook, facing: Facing, pose: Pose, expression
   const key = `${JSON.stringify(look)}|${facing}|${pose}|${expression}`;
   const cached = cache.get(key);
   if (cached) return cached;
+  const sheetId = sheetIdOf(look.character);
   const art = look.character ? CHARACTER_ART[look.character] : undefined;
-  const canvas = art ? composeCharacter(art, look, facing, pose, expression) : paintOnSpriteCanvas(look, facing, pose, expression);
+  const canvas = (sheetId ? sheetFrame(sheetId, facing, pose) : null)
+    ?? (art ? composeCharacter(art, look, facing, pose, expression) : paintOnSpriteCanvas(look, facing, pose, expression));
   cache.set(key, canvas);
   return canvas;
+}
+
+/** 캐릭터 시트를 새로 불러오거나 지웠을 때, 그 전에 그려 둔 장면을 버린다 */
+export function clearDollFrames(): void {
+  cache.clear();
 }
 
 /** 부품 조립 그림을 손 그림과 같은 크기의 도화지에 발 높이를 맞춰 얹는다 */

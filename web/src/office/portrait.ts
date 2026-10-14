@@ -20,6 +20,12 @@ export function portraitOf(look: Look): string {
 
 const previewCache = new Map<string, string>();
 
+/** 캐릭터 시트를 새로 불러오거나 지웠을 때, 그 전에 만든 얼굴·미리보기를 버린다 */
+export function clearPortraits(): void {
+  cache.clear();
+  previewCache.clear();
+}
+
 /** 꾸미기 미리보기용 전신 그림 */
 export function previewOf(doll: Look['doll']): string {
   const key = JSON.stringify(doll);

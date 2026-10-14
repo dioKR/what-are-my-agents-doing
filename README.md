@@ -127,6 +127,29 @@ From the fifth agent on, the same four characters are reused with different hair
   - Poses: sit, type, think, raise hand, coffee, stretch, carry
   - Expressions: 6
 
+### Your own character (PNG sheet)
+
+You can draw your own character and put it in the office.
+
+1. Click "Customize", then **Download template**. You get a PNG of the current character in every direction and pose.
+2. Paint over it in a pixel art tool such as [Aseprite](https://www.aseprite.org/) or [Piskel](https://www.piskelapp.com/) (free, in the browser). Set the grid to 32×44 to see the cells.
+3. Click **Upload PNG**. The character walks around the office right away. Click **Save** to keep it on that agent.
+
+<p align="center"><img src="docs/images/sheet-template.png" width="704" alt="The character sheet template: 11 poses across, 4 directions down"></p>
+
+| | |
+|---|---|
+| Sheet size | 352×176 PNG with a transparent background |
+| One cell | 32×44 (one frame) |
+| Columns (poses) | stand, walk1, walk2, sit, type1, type2, think, raise, drink, stretch, carry |
+| Rows (directions) | down, up, left, right |
+| Required | stand, walk1 and walk2 facing down, up and left (9 cells) |
+| Empty cells | use the standing frame of the same direction; an empty right row mirrors the left row |
+
+- Uploaded sheets are saved in `~/.wamad/characters/` and work the same in the desktop app and from the terminal. Delete one with ✕ next to its name.
+- Uploaded characters are drawn exactly as painted, so shop headwear isn't drawn on them (pets still follow).
+- Characters from anime, games and other works are fine for fun on your own computer, but please don't share or publish those sheets. This project only ships its own original characters.
+
 ---
 
 ## Dress-up shop
@@ -311,6 +334,7 @@ server/
   links.ts                finds PR URLs and local server URLs
   team.ts                 splits team events into lead and teammate states
   wallet.ts               coins earned from work, buying and equipping shop items (~/.wamad/wallet.json)
+  characters.ts           uploaded character sheets (~/.wamad/characters/)
   records.ts              records: tasks, busiest moment, longest-lived agent (~/.wamad/records.json)
 shared/shop.ts            shop items, prices and coin rules (shared by server and UI)
 shared/records.ts         record shapes (shared by server and UI)
@@ -324,6 +348,7 @@ web/src/
   panels/                 cards, alerts, details, tabs, customizer, settings
   shop/                   dress-up shop window and wallet state
   records/                records window (trophy icon)
+  characters/             uploaded character sheets: list, upload, template download
   i18n.ts                 UI language (Korean/English)
 ```
 
