@@ -20,8 +20,14 @@ const HELP = `wamad — What Are My Agents Doing? (내 에이전트들은 뭘 �
   wamad team install <폴더> [--force]  역할별 팀원 정의(po·pm·design·fe·be·infra)를 프로젝트에 복사
   wamad help                     이 도움말`;
 
+const sourceServer = fileURLToPath(new URL('../server/index.ts', import.meta.url));
+const bundledServer = fileURLToPath(new URL('../dist/server/index.mjs', import.meta.url));
+
 function start() {
-  // 화면 파일이 없으면 먼저 만든다 (저장소를 막 받았을 때)
+  // npm으로 설치한 패키지에는 server/ 소스가 없다. 그때는 묶어 둔 JavaScript 서버를 쓴다
+  // (Node는 node_modules 안의 TypeScript를 실행하지 않는다)
+  if (!existsSync(sourceServer)) return run([bundledServer]);
+  // 저장소를 막 받았으면 화면 파일을 먼저 만들고 TypeScript 서버를 그대로 실행한다
   if (!existsSync(fileURLToPath(new URL('../dist/web/index.html', import.meta.url)))) {
     const built = spawnSync('npm', ['run', 'build'], { cwd: root, stdio: 'inherit', shell: process.platform === 'win32' }).status;
     if (built !== 0) return built ?? 1;

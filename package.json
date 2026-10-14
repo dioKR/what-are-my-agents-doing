@@ -1,7 +1,16 @@
 {
   "name": "wamad",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "What Are My Agents Doing? — see which of your Claude Code agents are working, at a glance, as a pixel-art office",
+  "keywords": [
+    "claude-code",
+    "ai-agents",
+    "agent-teams",
+    "pixel-art",
+    "dashboard",
+    "visualization",
+    "multi-agent"
+  ],
   "author": {
     "name": "Yehwan Oh",
     "url": "https://github.com/dioKR"
@@ -11,14 +20,23 @@
     "type": "git",
     "url": "https://github.com/dioKR/what-are-my-agents-doing.git"
   },
-  "private": true,
   "type": "module",
   "main": "desktop/main.mjs",
   "bin": {
     "wamad": "bin/wamad.mjs"
   },
+  "files": [
+    "bin/",
+    "dist/web/",
+    "dist/server/",
+    "hooks/",
+    "scripts/",
+    "team/",
+    "README.md",
+    "README.ko.md"
+  ],
   "engines": {
-    "node": ">=23.6"
+    "node": ">=20"
   },
   "scripts": {
     "start": "vite build && node server/index.ts",
@@ -26,21 +44,29 @@
     "dev": "vite",
     "build": "vite build",
     "typecheck": "tsc --noEmit -p .",
-    "test": "node --test \"server/**/*.test.ts\"",
+    "test": "node --test \"server/**/*.test.ts\" \"web/src/**/*.test.ts\"",
     "hooks:install": "node scripts/install-claude-hooks.mjs",
     "hooks:uninstall": "node scripts/install-claude-hooks.mjs --uninstall",
     "team:install": "node scripts/install-team.mjs",
-    "build:server": "esbuild server/app.ts --bundle --platform=node --format=esm --target=node22 --outfile=dist/server/app.mjs",
+    "build:server": "esbuild server/app.ts server/index.ts --bundle --platform=node --format=esm --target=node20 --outdir=dist/server --out-extension:.js=.mjs",
     "desktop": "npm run build && npm run build:server && electron .",
-    "dist:desktop": "npm run build && npm run build:server && electron-builder --publish never"
+    "dist:desktop": "npm run build && npm run build:server && electron-builder --publish never",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run build:server",
+    "test:e2e": "node --test \"e2e/**/*.test.mjs\""
   },
   "devDependencies": {
     "@types/node": "^26.6.5",
     "electron": "^44.7.2",
     "electron-builder": "^26.15.3",
     "esbuild": "^0.28.2",
+    "playwright-core": "^1.64.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.4"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "electron-winstaller@5.4.0": true,
+    "fsevents": false
   },
   "build": {
     "appId": "io.github.diokr.wamad",
@@ -94,9 +120,5 @@
       "repo": "what-are-my-agents-doing",
       "releaseType": "release"
     }
-  },
-  "allowScripts": {
-    "esbuild@0.28.2": true,
-    "electron-winstaller@5.4.0": true
   }
 }

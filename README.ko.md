@@ -24,6 +24,8 @@
 - **내 컴퓨터 안에서만 동작합니다.** 127.0.0.1에서만 열리고, 아무것도 밖으로 보내지 않습니다.
 - **한국어 / English** 화면을 지원합니다.
 
+버전마다 바뀐 점은 [CHANGELOG](CHANGELOG.md)에 있습니다.
+
 ---
 
 ## 데스크톱 앱 (터미널 필요 없음)
@@ -34,7 +36,17 @@
 - 아직 서명하지 않은 앱이라 처음 열 때 경고가 뜹니다. 여는 방법은 홈페이지에 있습니다.
 - 메뉴 막대에 머뭅니다: 화면 열기, Claude Code와 연결(버튼 하나로 훅 설치), 로그인할 때 자동 실행, 끄기.
 
-## 빠른 시작 (소스에서 실행)
+## 빠른 시작 (터미널)
+
+Node.js 20 이상이 있으면 한 줄이면 됩니다.
+
+```bash
+npx wamad
+```
+
+브라우저에서 **http://127.0.0.1:4545** 를 엽니다. `wamad` 명령을 계속 쓰려면 `npm install -g wamad`로 한 번 설치하세요.
+
+### 소스에서 실행
 
 Node.js 23.6 이상이 필요합니다. TypeScript 파일을 빌드 없이 그대로 실행하기 때문입니다.
 
@@ -250,11 +262,14 @@ WAMAD_PORT=4600 wamad
 ```bash
 npm run server      # 로컬 서버 (4545)
 npm run dev         # 화면 개발 서버 (Vite). /api 요청은 4545로 넘긴다
-npm test            # 서버 쪽 테스트
 npm run typecheck
+npm test            # 서버 동작, 코인 규칙, 도트 데이터 검사
+npm run build && npm run test:e2e   # 설치된 Chrome으로 화면을 열어 오류가 없는지 검사
 npm run desktop       # 데스크톱 앱(Electron)을 소스에서 실행
 npm run dist:desktop  # 설치 파일을 release/ 에 만들기
 ```
+
+PR이 올라오면 GitHub Actions가 같은 검사(타입 검사, 단위 테스트, 빌드, 브라우저 화면 검사)를 자동으로 돌립니다. 모두 초록불이면 머지해도 됩니다. 자세한 건 [CONTRIBUTING](CONTRIBUTING.md)에 있습니다.
 
 `v`로 시작하는 태그를 올리면 GitHub Actions가 macOS·Windows 설치 파일을 만들어 GitHub Release에 붙입니다. 홈페이지는 `docs/`에 있습니다(GitHub Pages).
 
@@ -274,12 +289,17 @@ server/
   humanize.ts             도구 호출 → "테스트 돌리는 중" 같은 한국어·영어 문장
   links.ts                PR 주소·로컬 서버 주소 찾기
   team.ts                 팀 이벤트를 리더·팀원 상태로 나누기
+  wallet.ts               일해서 번 코인, 상점 물건 사기·입히기 (~/.wamad/wallet.json)
+shared/shop.ts            상점 물건, 값, 코인 규칙 (서버와 화면이 함께 씀)
+e2e/                      브라우저(Chrome) 화면 검사
 hooks/claude-hook.mjs     Claude Code가 실행하는 훅. 서버로 넘기기만 한다
 team/agents/              역할별 팀원 정의 (po, pm, design, fe, be, infra)
 web/src/
   office/                 지도, 가구, 조명, 캐릭터 이동(actors), 그리기(renderer), 지도 위 글자(labels)
   office/character/       캐릭터 그리기(doll). sprites/에 손으로 찍은 도트(머리·몸통·팔·다리·소품)
   panels/                 카드, 알림, 상세 칸, 탭, 꾸미기, 설정
+  office/pets/             캐릭터를 따라다니는 펫 (도트 + 따라가기)
+  shop/                   꾸미기 상점 창과 지갑 상태
   i18n.ts                 화면 언어(한국어·영어)
 ```
 

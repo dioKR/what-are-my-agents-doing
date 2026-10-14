@@ -32,7 +32,7 @@ function outlineOf(hex: string): string {
   return shade(hex, -0.45 - 0.27 * luminance);
 }
 
-function paletteOf(art: CharacterArt, look: DollLook): Record<string, string> {
+export function paletteOf(art: CharacterArt, look: DollLook): Record<string, string> {
   return {
     // 머리카락
     o: outlineOf(look.hair), d: shade(look.hair, -0.2), H: look.hair, h: shade(look.hair, 0.3),

@@ -186,26 +186,42 @@ export interface StartOptions {
   webRoot: string;
 }
 
+export interface RunningServer {
+  /** 화면 주소 (예: http://127.0.0.1:4545) */
+  url: string;
+  /** 서버와 대화 기록 읽기를 멈춘다 (테스트에서 쓴다) */
+  stop(): Promise<void>;
+}
+
 /**
- * 서버를 켜고 대화 기록 읽기를 시작한다. 켜지면 화면 주소를 돌려준다.
+ * 서버를 켜고 대화 기록 읽기를 시작한다.
  * 포트를 이미 다른 프로그램이 쓰고 있으면 실패한다 (error.code === 'EADDRINUSE').
  */
-export async function startServer(options: StartOptions): Promise<string> {
+export async function startServer(options: StartOptions): Promise<RunningServer> {
   webRoot = options.webRoot;
   startedAt = Date.now();
   await wallet.load();
   const server = createServer((req, res) => void handleRequest(req, res));
-  return new Promise((resolve, reject) => {
+  return new Promise<RunningServer>((resolve, reject) => {
     server.once('error', reject);
     server.listen(options.port, HOST, () => {
       // 화면 연결이 끊기지 않게 주기적으로 빈 줄을 보내고, 오래 소식 없는 세션은 치운다.
-      setInterval(() => {
+      const sweep = setInterval(() => {
         for (const res of listeners) res.write(': ping\n\n');
         const now = Date.now();
         for (const agent of agents.values()) if (now - agent.updatedAt > STALE_AGENT_MS) remove(agent.id);
       }, 15_000);
-      watchTranscripts((events) => applyEvents(events, 'transcript'));
-      resolve(`http://${HOST}:${options.port}`);
+      const stopWatching = watchTranscripts((events) => applyEvents(events, 'transcript'));
+      const stop = () => new Promise<void>((done) => {
+        clearInterval(sweep);
+        stopWatching();
+        for (const res of listeners) res.end();
+        server.close(() => done());
+      });
+      // port를 0으로 주면 운영체제가 빈 포트를 고른다 (테스트용). 실제로 열린 포트로 주소를 만든다
+      const address = server.address();
+      const port = typeof address === 'object' && address ? address.port : options.port;
+      resolve({ url: `http://${HOST}:${port}`, stop });
     });
   });
 }

@@ -5,7 +5,7 @@ import type { View } from './types.ts';
 export const ACCESSORY_COLORS: Record<string, string> = {
   0: '#2a2232', 1: '#ffd34d', 2: '#e2454f', 3: '#5b8de8', 4: '#7cd36a', 5: '#3f8a3c',
   6: '#c2453a', 7: '#8a2a20', 8: '#2f5fa8', 9: '#1f3f78', j: '#2c4f8a', J: '#1b3360',
-  r: '#e2454f', q: '#a8303a', z: '#fff3b0', x: '#8fd3ff', g: '#2a2232',
+  r: '#e2454f', q: '#a8303a', z: '#fff3b0', x: '#8fd3ff', g: '#2a2232', y: '#ffd34d', // y: 우체부 모자 배지
   K: '#2a2d35', G: '#4d5462', M: '#7fe0b4',
   // 상점 물건 색: 분홍 · 진분홍 · 잎 · 노랑꽃 · 산타 빨강 · 털 · 선글라스 알 · 알 반사 · 주황
   u: '#ff7eb6', U: '#c2457e', f: '#5fbf4a', t: '#ffd34d', v: '#d4283c', B: '#f6f4f0', i: '#1c1b24', l: '#6f7fa6', A: '#ff9a3c'

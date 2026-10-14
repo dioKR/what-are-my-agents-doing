@@ -24,6 +24,8 @@ You can tell who is doing what at a glance.
 - **Stays on your machine.** It listens on 127.0.0.1 only and sends nothing out.
 - **Korean / English** UI.
 
+What's new in each version: [CHANGELOG](CHANGELOG.md).
+
 ---
 
 ## Desktop app (no terminal needed)
@@ -34,7 +36,17 @@ Download it from the homepage: **https://dioKR.github.io/what-are-my-agents-doin
 - The app isn't signed yet, so your computer warns you the first time you open it. The homepage shows how to open it.
 - It lives in the menu bar: open the office, connect to Claude Code (installs the hooks with one click), open at login, quit.
 
-## Quick start (from source)
+## Quick start (terminal)
+
+With Node.js 20 or later, one line is enough:
+
+```bash
+npx wamad
+```
+
+Open **http://127.0.0.1:4545** in your browser. To keep the `wamad` command around, install it once with `npm install -g wamad`.
+
+### From source
 
 Requires Node.js 23.6 or later, because it runs the TypeScript files directly without a build step.
 
@@ -250,11 +262,14 @@ WAMAD_PORT=4600 wamad
 ```bash
 npm run server      # local server (4545)
 npm run dev         # UI dev server (Vite); /api is proxied to 4545
-npm test            # server tests
 npm run typecheck
+npm test            # server logic, wallet rules, pixel art data
+npm run build && npm run test:e2e   # opens the page in your installed Chrome and checks for errors
 npm run desktop       # run the desktop app (Electron) from source
 npm run dist:desktop  # build installers into release/
 ```
+
+Every pull request runs the same checks on GitHub Actions (type check, unit tests, build, browser smoke test), so a PR can be merged when CI is green. See [CONTRIBUTING](CONTRIBUTING.md).
 
 Pushing a `v*` tag builds the macOS and Windows installers on GitHub Actions and attaches them to a GitHub Release. The homepage lives in `docs/` (GitHub Pages).
 
@@ -274,12 +289,17 @@ server/
   humanize.ts             tool call → Korean/English sentence like "Running tests"
   links.ts                finds PR URLs and local server URLs
   team.ts                 splits team events into lead and teammate states
+  wallet.ts               coins earned from work, buying and equipping shop items (~/.wamad/wallet.json)
+shared/shop.ts            shop items, prices and coin rules (shared by server and UI)
+e2e/                      browser smoke test (Chrome)
 hooks/claude-hook.mjs     the hook Claude Code runs; it only forwards to the server
 team/agents/              role definitions (po, pm, design, fe, be, infra)
 web/src/
   office/                 map, furniture, lighting, movement (actors), drawing (renderer), map text (labels)
   office/character/       character drawing (doll); sprites/ holds the hand-placed pixel art (heads, torsos, arms, legs, accessories)
+  office/pets/             pets that follow their character (pixel art + follow logic)
   panels/                 cards, alerts, details, tabs, customizer, settings
+  shop/                   dress-up shop window and wallet state
   i18n.ts                 UI language (Korean/English)
 ```
 

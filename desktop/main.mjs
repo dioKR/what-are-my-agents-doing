@@ -23,7 +23,7 @@ app.on('second-instance', () => showWindow());
 /** 서버를 켠다. 이미 4545 포트에 wamad가 떠 있으면(명령줄로 켰을 때) 그 화면을 쓴다 */
 async function ensureServer() {
   try {
-    return await startServer({ port: PORT, webRoot: join(app.getAppPath(), 'dist', 'web') });
+    return (await startServer({ port: PORT, webRoot: join(app.getAppPath(), 'dist', 'web') })).url;
   } catch (error) {
     if (error.code !== 'EADDRINUSE') throw error;
     const existing = `http://127.0.0.1:${PORT}`;
