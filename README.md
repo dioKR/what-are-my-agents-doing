@@ -148,6 +148,23 @@ Your agents earn coins by working, and you spend them on headwear and pets for t
 - Only work done while the app or server is running earns coins (old history read at startup doesn't count). A "+coins" pops up over the character when it earns.
 - The wallet is saved in `~/.wamad/wallet.json`, so it survives restarts and works the same in the desktop app and from the terminal.
 
+## Records (trophy icon)
+
+Click the trophy next to the gear to see the records your agents have set.
+
+<p align="center"><img src="docs/images/records.png" width="600" alt="The records window: most agents working at once, longest and fastest task, longest-surviving agent, all-time work and who is most senior and newest in the office"></p>
+
+- **Best:** the most agents working at once, the longest task, the fastest task and the longest-surviving agent. Each record shows who set it, the request it was working on, and when.
+- **All-time work:** tasks finished, tool calls and the total time spent on tasks.
+- **In the office now:** the most senior agent (started first) and the newest one (started last).
+
+How it counts:
+
+- A **task** runs from your request to the moment the agent finishes its reply. Replies that used no tools are left out, so "fastest task" isn't just a one-line answer.
+- **Working at once** counts agents that are neither waiting for you nor done.
+- An agent's **lifetime** runs from its start to its last activity.
+- Like coins, only what happens while the app or server is running counts, so restarting never counts the same task twice. Records are saved in `~/.wamad/records.json`.
+
 ## Team and meeting room
 
 ![The team gathered in the meeting room, with the Team tab](docs/images/team.png)
@@ -294,7 +311,9 @@ server/
   links.ts                finds PR URLs and local server URLs
   team.ts                 splits team events into lead and teammate states
   wallet.ts               coins earned from work, buying and equipping shop items (~/.wamad/wallet.json)
+  records.ts              records: tasks, busiest moment, longest-lived agent (~/.wamad/records.json)
 shared/shop.ts            shop items, prices and coin rules (shared by server and UI)
+shared/records.ts         record shapes (shared by server and UI)
 e2e/                      browser smoke test (Chrome)
 hooks/claude-hook.mjs     the hook Claude Code runs; it only forwards to the server
 team/agents/              role definitions (po, pm, design, fe, be, infra)
@@ -304,6 +323,7 @@ web/src/
   office/pets/             pets that follow their character (pixel art + follow logic)
   panels/                 cards, alerts, details, tabs, customizer, settings
   shop/                   dress-up shop window and wallet state
+  records/                records window (trophy icon)
   i18n.ts                 UI language (Korean/English)
 ```
 

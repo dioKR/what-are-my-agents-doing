@@ -1,14 +1,13 @@
 // 지갑: 에이전트가 한 일로 코인을 주고, 상점에서 사고, 캐릭터에 입힌다.
 // 계산은 순수 함수로 두고(테스트하기 쉽게), 파일 저장은 WalletStore가 맡는다 (~/.wamad/wallet.json).
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import type { AgentSnapshot } from '../shared/protocol.ts';
 import { EMPTY_WALLET, REWARD_COINS, shopItem, type EarnedCoins, type Equipped, type RewardReason, type ShopSlot, type WalletState } from '../shared/shop.ts';
 import type { ClaudeHookPayload } from './claudeHook.ts';
+import { JsonFileStore } from './jsonFileStore.ts';
 
 const MAX_RECENT = 20;
-const SAVE_DELAY_MS = 500;
 const WORKING: ReadonlySet<AgentSnapshot['activity']> = new Set(['working', 'thinking']);
 
 /** 이벤트 하나로 상태가 prev → next로 바뀔 때 받을 코인 (같은 이유가 여러 번이면 여러 개) */
@@ -59,32 +58,9 @@ export function equip(state: WalletState, key: string, slot: ShopSlot, itemId: s
   return { ok: true, state: { ...state, equipped } };
 }
 
-/** 지갑 파일을 읽고 쓴다. 바뀔 때마다 조금 모았다가 저장한다 */
-export class WalletStore {
-  state: WalletState = EMPTY_WALLET;
-  private readonly path: string;
-  private saveTimer: ReturnType<typeof setTimeout> | null = null;
-
+/** 지갑 파일 (~/.wamad/wallet.json) */
+export class WalletStore extends JsonFileStore<WalletState> {
   constructor(path = join(homedir(), '.wamad', 'wallet.json')) {
-    this.path = path;
-  }
-
-  async load(): Promise<void> {
-    try {
-      this.state = { ...EMPTY_WALLET, ...(JSON.parse(await readFile(this.path, 'utf8')) as Partial<WalletState>) };
-    } catch {
-      this.state = EMPTY_WALLET; // 처음 쓰거나 파일이 깨졌으면 빈 지갑
-    }
-  }
-
-  set(next: WalletState): void {
-    this.state = next;
-    if (this.saveTimer) clearTimeout(this.saveTimer);
-    this.saveTimer = setTimeout(() => void this.save(), SAVE_DELAY_MS);
-  }
-
-  private async save(): Promise<void> {
-    await mkdir(dirname(this.path), { recursive: true });
-    await writeFile(this.path, JSON.stringify(this.state, null, 2));
+    super(path, EMPTY_WALLET);
   }
 }
