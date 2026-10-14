@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.2
+
+- **Fixed: Windows showed "화면 파일이 없습니다" instead of the office.** The server turned `/` into `\` with Windows path rules, so it tried to open the folder instead of the home page. File paths in "doing now" also show with `/` on Windows now.
+- **Fixed: renamed agents went back to the session title** (and custom looks or equipped shop items could come off) when an agent changed into a subfolder. Names are now remembered by the project folder the session started in.
+- CI now also runs type check, unit tests and build on Windows.
+
 ## 0.2.1
 
 - **New version notice in the desktop app.** Once a day it checks GitHub for the latest release. If there's a newer one, the menu bar icon shows "Get the new version" and a one-time dialog offers Download / Later / Skip this version. You can turn the check off or run it now from the menu.
