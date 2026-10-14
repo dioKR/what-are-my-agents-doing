@@ -23,6 +23,7 @@ import { closeSettingsOnClickAwayOrEscape } from './panels/settingsMenu.ts';
 import { applyStaticTexts, currentLang, setLang, t, type Lang } from './i18n.ts';
 import type { ShopSlot } from '../../shared/shop.ts';
 import { PetKeeper } from './office/pets/pets.ts';
+import { ClubMusic } from './office/music/clubMusic.ts';
 import { renderShop } from './shop/shopPanel.ts';
 import { activeCoinPops, addCoinPop, buyItem, currentWallet, equipItem, equippedOf, setWallet } from './shop/wallet.ts';
 
@@ -41,7 +42,8 @@ const g = canvas.getContext('2d')!;
 const els = {
   stage: byId('stage'), mapWrap: byId('mapwrap'), labels: byId('labels'), empty: byId('empty'),
   agentBar: byId('agentbar'), alerts: byId('alerts'), inspector: byId('inspector'), tabPanel: byId('tabpanel'),
-  connection: byId('connection'), coinCount: byId('coinCount'), shop: byId<HTMLDialogElement>('shop')
+  connection: byId('connection'), coinCount: byId('coinCount'), shop: byId<HTMLDialogElement>('shop'),
+  musicChip: byId('musicChip'), soundEnabled: byId<HTMLInputElement>('soundEnabled'), soundVolume: byId<HTMLInputElement>('soundVolume')
 };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -54,6 +56,7 @@ const lookWithShopItems = (agent: AgentSnapshot) => {
 };
 const director = new ActorDirector(lookWithShopItems);
 const pets = new PetKeeper();
+const music = new ClubMusic();
 let shopTab: ShopSlot = 'head';
 const lightLayer = document.createElement('canvas');
 lightLayer.width = MAP_PX_W; lightLayer.height = MAP_PX_H;
@@ -126,6 +129,10 @@ function refreshPanels(): void {
   els.empty.hidden = agents.size > 0;
   els.connection.textContent = connected ? t('app.connected', { n: agents.size }) : t('app.connecting');
   els.coinCount.textContent = String(currentWallet().coins);
+  // 춤추는 캐릭터가 없어지면 음악도 끈다
+  const someoneDancing = [...director.actors.values()].some((a) => a.isDancing);
+  if (music.isPlaying && !someoneDancing) music.stop();
+  els.musicChip.hidden = !music.isPlaying;
   if (els.shop.open) renderShop(els.shop, shopTab, views, selected);
 }
 
@@ -244,8 +251,22 @@ canvas.addEventListener('click', (event) => {
     const distance = Math.hypot(mx - (box.x + DOLL_W / 2), my - (box.y + DOLL_H / 2));
     if (distance < HIT_RADIUS && (!best || distance < best.distance)) best = { id: actor.id, distance };
   }
-  if (best) { selectedId = best.id; renamingId = null; stopCustomizing(); refreshPanels(); }
+  if (best) {
+    selectedId = best.id; renamingId = null; stopCustomizing();
+    // ??? 방에서 춤추는 캐릭터를 누르면 음악을 켜고 끈다
+    if (director.actors.get(best.id)?.isDancing) music.toggle();
+    refreshPanels();
+  }
 });
+
+// ??? 방 음악: 끄기 버튼, 설정 창의 소리 켜기 · 음량
+document.addEventListener('click', (event) => {
+  if ((event.target as HTMLElement).closest('[data-music-stop]')) { music.stop(); refreshPanels(); }
+});
+els.soundEnabled.checked = music.settings.enabled;
+els.soundVolume.value = String(music.settings.volume);
+els.soundEnabled.addEventListener('change', () => { music.setEnabled(els.soundEnabled.checked); refreshPanels(); });
+els.soundVolume.addEventListener('input', () => music.setVolume(Number(els.soundVolume.value)));
 
 // ---------- 반복 ----------
 closeSettingsOnClickAwayOrEscape(byId<HTMLDetailsElement>('settings'));

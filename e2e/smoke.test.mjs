@@ -91,6 +91,36 @@ test('설정에서 언어를 바꾸면 제목이 바뀐다', async () => {
   assert.equal(await page.textContent('h1'), 'What Are My Agents Doing?');
 });
 
+test('??? 방: 컨텍스트가 80%를 넘은 캐릭터가 춤추러 가고, 누르면 음악이 켜지고 끄기 버튼으로 끈다', async () => {
+  // 컨텍스트 사용량은 대화 기록의 마지막 토큰 수로 잰다: 200k 중 170k = 85%
+  const transcript = join(home, 'dancer.jsonl');
+  writeFileSync(transcript, JSON.stringify({ type: 'assistant', message: { usage: { input_tokens: 170000 } } }) + '\n');
+  await hook('dancer', { hook_event_name: 'SessionStart', transcript_path: transcript });
+  await hook('dancer', { hook_event_name: 'Stop', transcript_path: transcript });
+  // 이름표가 ??? 방(지도 37~46칸, 5~15줄) 안에 들어올 때까지 기다린다
+  const canvasBox = await page.locator('#map').boundingBox();
+  const scale = canvasBox.width / (47 * 16);
+  const tile = (box) => ({ x: (box.x + box.width / 2 - canvasBox.x) / scale / 16 + 2, y: (box.y - canvasBox.y) / scale / 16 + 2 });
+  const tag = page.locator('.tag', { hasText: 'E2E dancer' });
+  // 개발실 쪽에서 ??? 방까지는 60칸이 넘어 20초 남짓 걸린다. 방 안에서 멈출(= 춤추기 시작) 때까지 기다린다
+  let spot = { x: 0, y: 0 }, previous = { x: -1, y: -1 }, still = 0;
+  for (let i = 0; i < 90 && still < 2; i++) {
+    await page.waitForTimeout(500);
+    const box = await tag.boundingBox();
+    if (!box) continue;
+    previous = spot; spot = tile(box);
+    const inClub = spot.x > 37 && spot.y < 17;
+    still = inClub && Math.hypot(spot.x - previous.x, spot.y - previous.y) < 0.05 ? still + 1 : 0;
+  }
+  assert.ok(still >= 2, `춤추는 캐릭터가 ??? 방에 자리 잡지 못함: ${JSON.stringify(spot)}`);
+  const tagBox = await tag.boundingBox();
+  // 이름표는 발밑에 있으므로 조금 위(몸통)를 누른다
+  await page.mouse.click(tagBox.x + tagBox.width / 2, tagBox.y - 22 * scale);
+  await page.waitForSelector('#musicChip:not([hidden])', { timeout: 3000 });
+  await page.click('#musicChip', { force: true }); // 버튼이 박자에 맞춰 커졌다 작아져서 '멈출 때까지 기다리기'를 건너뛴다
+  await page.waitForSelector('#musicChip[hidden]', { state: 'attached', timeout: 3000 });
+});
+
 test('지금까지 브라우저 오류가 없다', () => {
   assert.deepEqual(pageErrors, []);
 });
