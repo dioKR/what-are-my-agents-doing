@@ -9,7 +9,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { _electron as electron } from 'playwright-core';
 
-// 실제 ~/.claude 설정을 건드리지 않도록 빈 홈 폴더로 띄운다
+// 맥·리눅스에서는 실제 ~/.claude 설정을 건드리지 않도록 빈 홈 폴더로 띄운다.
+// 윈도우의 홈(USERPROFILE)을 바꾸면 Electron이 켜지자마자 죽어서, 윈도우는 그대로 둔다
 const home = mkdtempSync(join(tmpdir(), 'wamad-desktop-'));
 const installedExe = process.env.WAMAD_APP_EXE;
 
@@ -19,7 +20,7 @@ const pageErrors = [];
 before(async () => {
   app = await electron.launch({
     ...(installedExe ? { executablePath: installedExe } : { args: ['.'] }),
-    env: { ...process.env, HOME: home, USERPROFILE: home }
+    env: { ...process.env, HOME: home, ELECTRON_ENABLE_LOGGING: '1' }
   });
   window = await app.firstWindow();
   window.on('pageerror', (error) => pageErrors.push(`pageerror: ${error.message}`));
