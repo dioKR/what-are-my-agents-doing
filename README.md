@@ -133,6 +133,9 @@ From the fifth agent on, the same four characters are reused with different hair
 
 Your agents earn coins by working, and you spend them on headwear and pets for their characters. There's no real money involved.
 
+<p align="center"><img src="docs/images/shop.png" width="600" alt="The dress-up shop: pick a character, then buy and put on headwear or bring a pet"></p>
+<p align="center"><img src="docs/images/shop-map.png" width="600" alt="Characters wearing cat ears and sunglasses, with a cat, a chick and a slime following them"></p>
+
 | What an agent did | Coins |
 |---|---|
 | Finished a turn of work | +1 |
