@@ -1,6 +1,6 @@
 {
   "name": "what-are-my-agents-doing",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "What Are My Agents Doing? — see which of your Claude Code agents are working, at a glance, as a pixel-art office",
   "keywords": [
     "claude-code",
