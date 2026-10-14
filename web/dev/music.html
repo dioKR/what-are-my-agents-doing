@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><title>??? 방 음악 미리 듣기</title></head>
+<body style="background:#15181c;color:#ece6d8;font:14px sans-serif;padding:24px">
+<p>??? 방 음악을 두 바퀴 녹음합니다. 끝나면 아래에서 들을 수 있습니다.</p>
+<audio id="player" controls></audio>
+<script type="module">
+// 앱과 같은 연주 코드로 소리 없이 녹음(OfflineAudioContext)해 WAV로 만든다. 미리 듣기·캡처용
+import { LOOP_SECONDS, createMasterBus, scheduleLoop } from '../src/office/music/discoLoop.ts';
+const LOOPS = 2, RATE = 44100;
+const ctx = new OfflineAudioContext(2, Math.ceil(RATE * (LOOP_SECONDS * LOOPS + 0.5)), RATE);
+const { input } = createMasterBus(ctx, 0.6);
+for (let i = 0; i < LOOPS; i++) scheduleLoop(ctx, input, 0.05 + i * LOOP_SECONDS);
+const rendered = await ctx.startRendering();
+
+function toWav(buffer) {
+  const channels = buffer.numberOfChannels, length = buffer.length * channels * 2;
+  const view = new DataView(new ArrayBuffer(44 + length));
+  const text = (offset, s) => [...s].forEach((c, i) => view.setUint8(offset + i, c.charCodeAt(0)));
+  text(0, 'RIFF'); view.setUint32(4, 36 + length, true); text(8, 'WAVEfmt ');
+  view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, channels, true);
+  view.setUint32(24, buffer.sampleRate, true); view.setUint32(28, buffer.sampleRate * channels * 2, true);
+  view.setUint16(32, channels * 2, true); view.setUint16(34, 16, true); text(36, 'data'); view.setUint32(40, length, true);
+  const data = [...Array(channels).keys()].map((c) => buffer.getChannelData(c));
+  let offset = 44;
+  for (let i = 0; i < buffer.length; i++) for (const ch of data) {
+    const s = Math.max(-1, Math.min(1, ch[i]));
+    view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true); offset += 2;
+  }
+  return new Blob([view], { type: 'audio/wav' });
+}
+const wav = toWav(rendered);
+document.getElementById('player').src = URL.createObjectURL(wav);
+const bytes = new Uint8Array(await wav.arrayBuffer());
+let binary = ''; for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+window.musicWav = btoa(binary);
+</script></body></html>

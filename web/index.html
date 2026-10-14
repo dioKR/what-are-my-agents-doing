@@ -32,6 +32,10 @@
               <button type="button" data-lang="ko" aria-pressed="false">한국어</button>
               <button type="button" data-lang="en" aria-pressed="false">English</button>
             </div>
+            <p class="settings-label" data-i18n="settings.sound"></p>
+            <label class="sound-row"><input type="checkbox" id="soundEnabled"> <span data-i18n="settings.soundOn"></span></label>
+            <label class="sound-row"><span data-i18n="settings.volume"></span> <input type="range" id="soundVolume" min="0" max="1" step="0.05"></label>
+            <p class="settings-hint" data-i18n="settings.soundHint"></p>
           </div>
         </details>
       </div>
@@ -45,6 +49,7 @@
           <canvas id="map" width="608" height="432" data-i18n-aria="map.aria"></canvas>
           <div class="labels" id="labels" aria-hidden="true"></div>
           <div class="alerts" id="alerts" aria-live="polite"></div>
+          <button type="button" class="music-chip" id="musicChip" data-music-stop hidden data-i18n="music.stop"></button>
           <div class="empty" id="empty" hidden>
             <h2 data-i18n="empty.title"></h2>
             <ol>

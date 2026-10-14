@@ -240,6 +240,15 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .chip.in_progress { color: #1b1608; background: var(--amber); border-color: var(--amber); }
 .chip.completed { color: #0f2014; background: var(--good); border-color: var(--good); }
 
+/* ---------- ??? 방 음악 ---------- */
+.music-chip { position: absolute; top: 8px; right: 8px; padding: 4px 10px; min-height: 30px; font: 13px var(--pixel); color: #1b1608; background: #ff7eb6; border: 2px solid #1b1608; box-shadow: 3px 3px 0 #000; cursor: pointer; animation: music-pulse 0.88s ease-in-out infinite; }
+.music-chip:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+@keyframes music-pulse { 50% { transform: scale(1.06); } }
+@media (prefers-reduced-motion: reduce) { .music-chip { animation: none; } }
+.sound-row { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+.sound-row input[type="range"] { flex: 1; accent-color: var(--amber); }
+.settings-panel .settings-hint { margin: 0; font-size: 11px; color: var(--muted); }
+
 /* ---------- 꾸미기 상점 ---------- */
 /* 픽셀 동전: 노란 원에 진한 테두리와 가운데 홈 */
 .coin-icon { display: inline-block; width: 12px; height: 12px; flex: none; background:
