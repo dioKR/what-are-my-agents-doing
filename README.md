@@ -41,10 +41,10 @@ Download it from the homepage: **https://dioKR.github.io/what-are-my-agents-doin
 With Node.js 20 or later, one line is enough:
 
 ```bash
-npx wamad
+npx what-are-my-agents-doing
 ```
 
-Open **http://127.0.0.1:4545** in your browser. To keep the `wamad` command around, install it once with `npm install -g wamad`.
+Open **http://127.0.0.1:4545** in your browser. To keep the `wamad` command around, install it once with `npm install -g what-are-my-agents-doing`.
 
 ### From source
 
@@ -234,6 +234,7 @@ docs/index.html           homepage (GitHub Pages)
 - The server listens on **127.0.0.1 only**. Other machines on your network cannot reach it.
 - Transcripts are **read only**. They are never changed or deleted.
 - Nothing is sent out. The only internet request is for the UI fonts (Google Fonts).
+- The desktop app asks GitHub once a day for the latest release number, to tell you when a new version is out. It sends nothing about you, and you can turn it off from the menu bar icon ("Check for new versions").
 - Sending results over Slack or email is done by the agents with their own tools. This tool only shows that it happened.
 
 ---

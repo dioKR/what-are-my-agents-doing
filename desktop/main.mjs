@@ -1,21 +1,38 @@
 // 데스크톱 앱 (Electron). 비개발자도 설치 파일 하나로 쓸 수 있게 한다.
 // - 앱 안에서 로컬 서버를 켜고, 그 화면을 창으로 띄운다 (Node 설치 필요 없음)
-// - 메뉴 막대(트레이) 아이콘: 창 열기, Claude Code 연결(훅), 로그인할 때 자동 실행, 종료
+// - 메뉴 막대(트레이) 아이콘: 창 열기, Claude Code 연결(훅), 로그인할 때 자동 실행, 새 버전 알림, 종료
 // - 창을 닫아도 꺼지지 않고 메뉴 막대에서 계속 돈다
 import { app, BrowserWindow, Menu, Tray, dialog, nativeImage, shell } from 'electron';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { startServer } from '../dist/server/app.mjs';
 import { curlHookCommand, hooksInstalled, updateClaudeHooks } from '../scripts/claude-hooks-lib.mjs';
+import { DOWNLOAD_PAGE, fetchLatestVersion, isNewer } from './updates.mjs';
 
 const PORT = 4545;
 const ko = app.getLocale().startsWith('ko');
 const T = (koText, enText) => (ko ? koText : enText);
 const APP_NAME = 'What Are My Agents Doing?';
 
+/** 하루에 한 번 새 버전을 확인한다 */
+const UPDATE_CHECK_EVERY_MS = 24 * 60 * 60 * 1000;
+
 let window = null;
+/** 새 버전이 있으면 그 번호 (없으면 null) */
+let newerVersion = null;
 let tray = null;
 let url = '';
 let quitting = false;
+
+// 앱 설정 (새 버전 확인 여부, 건너뛴 버전). 앱 데이터 폴더의 settings.json에 둔다
+const settingsPath = () => join(app.getPath('userData'), 'settings.json');
+function readSettings() {
+  try { return { checkUpdates: true, skippedVersion: null, ...JSON.parse(readFileSync(settingsPath(), 'utf8')) }; }
+  catch { return { checkUpdates: true, skippedVersion: null }; }
+}
+function saveSettings(patch) {
+  try { writeFileSync(settingsPath(), JSON.stringify({ ...readSettings(), ...patch }, null, 2)); } catch { /* 못 쓰면 이번 실행에서만 바뀐다 */ }
+}
 
 if (!app.requestSingleInstanceLock()) app.quit();
 app.on('second-instance', () => showWindow());
@@ -71,16 +88,47 @@ async function setHooks(install) {
 async function refreshTray() {
   const connected = await hooksInstalled();
   const autoStart = app.getLoginItemSettings().openAtLogin;
+  const { checkUpdates } = readSettings();
   tray.setContextMenu(Menu.buildFromTemplate([
+    ...(newerVersion ? [{ label: T(`새 버전 v${newerVersion} 받기 ✨`, `Get the new version v${newerVersion} ✨`), click: () => void shell.openExternal(DOWNLOAD_PAGE) }, { type: 'separator' }] : []),
     { label: T('화면 열기', 'Open'), click: showWindow },
     { type: 'separator' },
     connected
       ? { label: T('Claude Code 연결됨 ✓ (연결 끊기)', 'Connected to Claude Code ✓ (disconnect)'), click: () => void setHooks(false) }
       : { label: T('Claude Code와 연결하기…', 'Connect to Claude Code…'), click: () => void askToConnect() },
     { label: T('로그인할 때 자동으로 켜기', 'Open at login'), type: 'checkbox', checked: autoStart, click: (item) => { app.setLoginItemSettings({ openAtLogin: item.checked }); } },
+    { label: T('새 버전 자동으로 확인', 'Check for new versions'), type: 'checkbox', checked: checkUpdates, click: (item) => { saveSettings({ checkUpdates: item.checked }); } },
+    { label: T(`지금 확인 (현재 v${app.getVersion()})`, `Check now (current v${app.getVersion()})`), click: () => void checkForUpdate(true) },
     { type: 'separator' },
     { label: T('끄기', 'Quit'), click: () => { quitting = true; app.quit(); } }
   ]));
+}
+
+/**
+ * GitHub에 최신 릴리스 번호만 물어본다. 새 버전이면 메뉴에 "새 버전 받기"를 띄우고, 한 번 알림 창을 연다.
+ * manual: 메뉴에서 직접 눌렀을 때 (건너뛴 버전이어도 알려 주고, 최신이면 최신이라고 알려 준다)
+ */
+async function checkForUpdate(manual = false) {
+  const settings = readSettings();
+  if (!manual && !settings.checkUpdates) return;
+  const latest = await fetchLatestVersion();
+  if (!latest || !isNewer(latest, app.getVersion())) {
+    if (manual) await dialog.showMessageBox({ type: 'info', message: latest ? T('최신 버전을 쓰고 있습니다', "You're up to date") : T('새 버전을 확인하지 못했습니다', "Couldn't check for updates"), detail: `v${app.getVersion()}` });
+    return;
+  }
+  const firstTime = newerVersion !== latest;
+  newerVersion = latest;
+  await refreshTray();
+  if (!manual && (!firstTime || settings.skippedVersion === latest)) return;
+  const { response } = await dialog.showMessageBox({
+    type: 'info',
+    buttons: [T('다운로드', 'Download'), T('나중에', 'Later'), T('이 버전 건너뛰기', 'Skip this version')],
+    defaultId: 0, cancelId: 1,
+    message: T(`새 버전 v${latest}이 나왔습니다`, `Version v${latest} is available`),
+    detail: T(`지금은 v${app.getVersion()}입니다. 홈페이지에서 새 설치 파일을 받아 덮어 설치하면 됩니다. 코인과 꾸민 모습은 그대로 남습니다.`, `You have v${app.getVersion()}. Download the new installer from the homepage and install it over this one. Your coins and looks stay.`)
+  });
+  if (response === 0) void shell.openExternal(DOWNLOAD_PAGE);
+  if (response === 2) saveSettings({ skippedVersion: latest });
 }
 
 /** 훅은 ~/.claude/settings.json 을 바꾸므로 무엇을 하는지 설명하고 허락을 받는다 */
@@ -113,6 +161,8 @@ app.whenReady().then(async () => {
   await refreshTray();
   showWindow();
   if (!(await hooksInstalled())) await askToConnect();
+  void checkForUpdate();
+  setInterval(() => void checkForUpdate(), UPDATE_CHECK_EVERY_MS);
 });
 
 app.on('activate', showWindow);

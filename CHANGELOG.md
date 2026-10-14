@@ -1,9 +1,15 @@
 # Changelog
 
+## 0.2.1
+
+- **New version notice in the desktop app.** Once a day it checks GitHub for the latest release. If there's a newer one, the menu bar icon shows "Get the new version" and a one-time dialog offers Download / Later / Skip this version. You can turn the check off or run it now from the menu.
+- **npm package renamed to `what-are-my-agents-doing`** (npm refused `wamad` as too similar to an existing package). Run it with `npx what-are-my-agents-doing`; after `npm install -g what-are-my-agents-doing` the command is still `wamad`.
+- If you installed the desktop app before 0.2.1, download the new version from the homepage once. From now on the app tells you about updates.
+
 ## 0.2.0
 
 - **Dress-up shop.** Agents earn coins by working (finished turn +1, todo +3, team task +5, PR +10). Spend them on headwear (heart headband, sunglasses, cat ears, flower crown, party hat, Santa hat) and pets that follow their character (chick, slime, cat, dog). Coins pop up over the character when earned. The wallet is saved in `~/.wamad/wallet.json`.
-- **npm.** Run it with `npx wamad`, or install with `npm install -g wamad`.
+- **npm-ready.** The server is bundled into plain JavaScript so it can run from an npm install (first published as 0.2.1).
 - **Hidden ??? room.** Agents whose context passes 80% go dance under the disco ball.
 - **Tests and CI.** Every PR runs a type check, unit tests (server, wallet rules, pixel art data), a build, and a browser smoke test in Chrome.
 - Fixed: the yellow badge on the courier's mail cap was never drawn.
