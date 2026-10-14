@@ -1,4 +1,4 @@
-// 에이전트 생김새. 기본은 네 캐릭터(분홍 머리 사원, 하얀 머리 사원, 라비, 은서)가 차례로 나오고, 사용자가 꾸민 값이 있으면 그 위에 덮는다.
+// 에이전트 생김새. 기본은 네 캐릭터(분홍 · 하얀 · 갈색 · 검은 머리 사원)가 차례로 나오고, 사용자가 꾸민 값이 있으면 그 위에 덮는다.
 import { shade } from './character/pixelSheet.ts';
 import type { Accessory, DollLook, EyeStyle, FaceMark, HairStyle, Outfit } from './character/doll.ts';
 
@@ -23,14 +23,14 @@ export const PRESETS: Array<{ id: string; label: Label; look: DollLook }> = [
     look: { character: 'white', skin: '#fbe6da', hair: '#eceff4', hairStyle: 'fluffy', eyes: '#e09a2c', eyeStyle: 'round', outfit: 'shirtTie', shirt: '#f6f6f6', pants: '#26262c', accessory: 'none' }
   },
   {
-    // 서버 개발자: 눈을 덮는 갈색 앞머리, 헤드폰, 볼 반창고, 회색 후드티
-    id: 'rabi', label: { ko: '라비', en: 'Rabi' },
-    look: { character: 'rabi', skin: '#fbe3d4', hair: '#c4945e', hairStyle: 'shaggy', eyes: '#8a5a2e', eyeStyle: 'round', outfit: 'hoodie', shirt: '#d9dbe0', pants: '#2c3446', accessory: 'headphones', mark: 'bandage' }
+    // 눈을 덮는 갈색 앞머리, 헤드폰, 볼 반창고, 회색 후드티
+    id: 'brown', label: { ko: '갈색 머리 사원', en: 'Brown-haired staffer' },
+    look: { character: 'brown', skin: '#fbe3d4', hair: '#c4945e', hairStyle: 'shaggy', eyes: '#8a5a2e', eyeStyle: 'round', outfit: 'hoodie', shirt: '#d9dbe0', pants: '#2c3446', accessory: 'headphones', mark: 'bandage' }
   },
   {
-    // 편의점 알바생: 끝을 붉게 물들인 단발, 빨간 눈, 흰 티셔츠와 명찰, 은 귀걸이
-    id: 'eunseo', label: { ko: '은서', en: 'Eunseo' },
-    look: { character: 'eunseo', skin: '#fbe6da', hair: '#4a2e26', hairStyle: 'dyedBob', eyes: '#d0283a', eyeStyle: 'round', outfit: 'staffTee', shirt: '#f4f2ee', pants: '#26262c', accessory: 'none', mark: 'earrings' }
+    // 끝을 붉게 물들인 단발, 빨간 눈, 흰 티셔츠와 명찰, 은 귀걸이
+    id: 'black', label: { ko: '검은 머리 사원', en: 'Black-haired staffer' },
+    look: { character: 'black', skin: '#fbe6da', hair: '#4a2e26', hairStyle: 'dyedBob', eyes: '#d0283a', eyeStyle: 'round', outfit: 'staffTee', shirt: '#f4f2ee', pants: '#26262c', accessory: 'none', mark: 'earrings' }
   }
 ];
 /** 다섯 번째부터는 같은 네 캐릭터를 머리색·눈색만 바꿔 쓴다 */

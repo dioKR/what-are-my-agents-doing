@@ -1,7 +1,7 @@
-// 은서: 끝을 붉게 물들인 단발, 빨간 눈, 명찰 단 흰 티셔츠와 은 목걸이, 은 귀걸이
+// 검은 머리 사원: 끝을 붉게 물들인 단발, 빨간 눈, 명찰 단 흰 티셔츠와 은 목걸이, 은 귀걸이
 import type { CharacterArt } from './types.ts';
 
-export const EUNSEO: CharacterArt = {
+export const BLACK: CharacterArt = {
   head: {
     down: [
       '..............oooo..............',

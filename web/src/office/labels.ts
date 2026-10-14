@@ -15,6 +15,8 @@ const BUSY: ReadonlySet<AgentSnapshot['activity']> = new Set(['working', 'thinki
 
 function bubbleText(agent: AgentSnapshot | undefined, actor: Actor, selected: boolean): string | null {
   if (!agent || actor.removed || !BUSY.has(agent.activity)) return null;
+  // ??? 방에서 춤추는 캐릭터는 말풍선 없이 춤만 춘다 (여럿이 모여 말풍선이 겹친다)
+  if (actor.isDancing) return null;
   // 회의실은 붐벼서, 팀원의 평소 작업 말풍선은 고른 팀원만 띄운다 (메시지·지시 말풍선은 따로 뜬다)
   if (actor.teamRole && actor.place === 'meeting' && !selected) return null;
   return lt(agent.summary) || null;

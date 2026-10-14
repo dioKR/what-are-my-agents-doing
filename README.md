@@ -1,259 +1,259 @@
-# What Are My Agents Doing? (내 에이전트들은 뭘 하고 있을까?)
+# What Are My Agents Doing?
 
-**내 컴퓨터에서 돌아가는 Claude Code 에이전트들이 지금 뭘 하는지, 픽셀 회사 화면으로 한눈에 보여 주는 로컬 대시보드**
+**A local dashboard that shows what the Claude Code agents on your machine are doing right now, as a pixel-art office you can take in at a glance.**
 
-명령어 이름은 첫 글자를 딴 **`wamad`** 입니다.
+The command is **`wamad`**, from the initials.
 
-[English](README.en.md)
+[한국어](README.ko.md)
 
-![What Are My Agents Doing? 화면: 개발실·자료실·서버실·수면실·회의실에서 에이전트 캐릭터가 일하는 모습](docs/images/overview.png)
+![What Are My Agents Doing?: agent characters working in the dev room, library, server room, nap room and meeting room](docs/images/overview.png)
 
-터미널 창을 여러 개 띄워 에이전트를 돌리다 보면 어느 창이 무슨 일을 하는지, 어느 창이 내 승인을 기다리는지 놓치기 쉽습니다.
-이 도구는 에이전트 하나를 캐릭터 하나로 바꿔 회사 지도 위에 세워 둡니다.
+When you run several agents in several terminal windows, it is easy to lose track of which one is doing what, and which one is waiting for your approval.
+It turns each agent into a character and places it on an office map.
 
-- 일하는 에이전트는 개발실 책상에서 타이핑합니다.
-- 웹을 찾아보는 에이전트는 자료실로 갑니다.
-- 대화를 요약하는 에이전트는 수면실에서 잡니다.
+- Agents that are working type at a desk in the dev room.
+- Agents searching the web walk to the library.
+- Agents compacting their conversation take a nap in the nap room.
 
-그래서 지도만 봐도 누가 무엇을 하는지 바로 보입니다.
+You can tell who is doing what at a glance.
 
-- **설치만 하면 바로 보입니다.** 지난 1시간 안에 움직인 Claude Code 세션은 이미 실행 중이어도 자동으로 나타납니다.
-- **내 컴퓨터 안에서만 동작합니다.** 127.0.0.1에서만 열리고, 아무것도 밖으로 보내지 않습니다.
-- **한국어 / English** 화면을 지원합니다.
+- **Works right after install.** Claude Code sessions that were active in the last hour show up automatically, including ones that were already running.
+- **Stays on your machine.** It listens on 127.0.0.1 only and sends nothing out.
+- **Korean / English** UI.
 
 ---
 
-## 빠른 시작
+## Quick start
 
-Node.js 23.6 이상이 필요합니다. TypeScript 파일을 빌드 없이 그대로 실행하기 때문입니다.
+Requires Node.js 23.6 or later, because it runs the TypeScript files directly without a build step.
 
 ```bash
 git clone https://github.com/dioKR/what-are-my-agents-doing.git
 cd what-are-my-agents-doing
 npm install
-npm link      # wamad 명령을 어디서든 쓸 수 있게 등록 (한 번만)
+npm link      # register the wamad command (once)
 wamad
 ```
 
-브라우저에서 **http://127.0.0.1:4545** 를 엽니다. `npm link` 없이 `npm start`로 켜도 됩니다.
+Open **http://127.0.0.1:4545** in your browser. `npm start` works too, without `npm link`.
 
-Claude Code에 아무 일이나 시키면 몇 초 안에 캐릭터가 나타납니다.
+Give Claude Code any task. Its character appears within a few seconds.
 
 ---
 
-## 지도에서 보이는 것
+## What you see on the map
 
-| 에이전트가 하는 일 | 캐릭터가 있는 곳 |
+| What the agent is doing | Where the character goes |
 |---|---|
-| 파일 읽기·수정, 명령 실행 | **개발실** 책상에서 타이핑 |
-| 웹 검색, 웹 문서 읽기 | **자료실** 책장 앞 |
-| 백그라운드 명령 (`run_in_background`) | **서버실** (서버 불빛이 빨라짐) |
-| 컨텍스트를 80% 넘게 씀 (곧 요약해야 함) | 회의실 위 숨은 방 **???** 에서 춤 (미러볼, 댄스 플로어) |
-| 컨텍스트가 차서 대화 요약(compact) | **수면실** 침대에서 잠 |
-| 내 지시를 오래 기다림 (90초 넘게) | **탕비실**에서 커피 |
-| 권한 승인 대기 | 자리에서 `!` 표시 + 지도 위 알림 |
-| 같은 명령이 5번 연속 실패 | 개발실을 헤맴 + 빨간 알림 |
-| Slack·메일 도구로 보내기/읽기 | **로비 우편함**까지 걸어가고, 배달부가 가져감 |
-| 하위 에이전트(Task)에게 일을 맡김 | 책상 옆에 새싹 머리 인턴 |
-| 할 일 목록(TodoWrite) | 개발실 벽 작업 보드에 카드 |
-| 세션 종료 | 문으로 퇴근 |
+| Reading or editing files, running commands | Types at a desk in the **dev room** |
+| Web search, reading web pages | In front of the **library** shelves |
+| Background commands (`run_in_background`) | **Server room** (the server lights blink faster) |
+| Context more than 80% used (compaction coming) | Dances in the hidden **???** room above the meeting room (disco ball, dance floor) |
+| Compacting a full context | Sleeps in the **nap room** |
+| Waiting for you for a while (over 90 seconds) | Has a coffee in the **lounge** |
+| Waiting for permission | `!` at the desk + an alert on the map |
+| The same command failed 5 times in a row | Wanders around the dev room + a red alert |
+| Sending or reading Slack/email through a tool | Walks to the **lobby mailbox**; a courier picks it up |
+| Delegating to a subagent (Task) | A sprout-haired intern next to the desk |
+| A todo list (TodoWrite) | Cards on the dev room board |
+| Session ended | Leaves through the front door |
 
-### 오른쪽 패널
+### Side panel
 
-- **상세 칸**에는 고른 에이전트의 정보가 나옵니다.
-  - 맡은 일(내가 보낸 요청)
-  - 지금 하는 일(예: "테스트 돌리는 중")과 실제 명령
-  - 에이전트가 마지막으로 남긴 말
-  - 컨텍스트 사용량
-- **링크**: 에이전트가 PR 주소나 로컬 서버 주소(`localhost:5173` 등)를 말하면, 지도 위 알림과 "링크" 탭에 눌러서 여는 링크로 모입니다.
-- **탭**은 다섯 개입니다. 활동 기록 · 팀 · 링크 · 우편 기록 · 할 일
+- The **details** panel shows the selected agent's:
+  - task (your request)
+  - current step (e.g. "Running tests") with the actual command
+  - last thing it said
+  - context usage
+- **Links**: when an agent mentions a PR URL or a local server (`localhost:5173`, etc.), it shows up as a clickable link in the alerts and in the "Links" tab.
+- There are five **tabs**: Activity · Team · Links · Mail · Todos.
 
-### 설정 (오른쪽 위 톱니바퀴)
+### Settings (gear icon, top right)
 
-- **시간대**는 지금 시각 / 낮 / 저녁 / 밤 중에서 고릅니다. "지금 시각"은 실제 시각에 맞춰 바뀌고, 밤에는 방 조명과 노트북 화면, 가로등이 켜집니다.
-- **언어**는 한국어 / English 중에서 고릅니다. 처음에는 브라우저 언어를 따르고, 고른 값은 기억합니다.
+- **Time of day** can be Now / Day / Evening / Night. "Now" follows your clock; at night the room lights, laptop screens and the street lamp turn on.
+- **Language** can be Korean or English. It starts from your browser language and remembers your choice.
 
-![밤 화면](docs/images/night.png)
+![Night view](docs/images/night.png)
 
 ---
 
-## 캐릭터
+## Characters
 
-![기본 캐릭터 네 명: 분홍 머리 사원, 하얀 머리 사원, 라비, 은서](docs/images/characters.png)
+![The four default characters: pink-, white-, brown- and black-haired staffers](docs/images/characters.png)
 
-기본 캐릭터는 네 명입니다. 에이전트가 나타난 순서대로 차례로 배정됩니다.
+There are four default characters. They are assigned in the order agents appear.
 
-| 순서 | 이름 | 생김새 |
+| Order | Name | Look |
 |---|---|---|
-| 1 | 분홍 머리 사원 | 긴 분홍 머리, 하트 눈, 블라우스와 사원증 |
-| 2 | 하얀 머리 사원 | 곱슬 흰 머리, 호박색 눈, 셔츠와 넥타이, 목걸이 사원증 |
-| 3 | 라비 | 눈을 덮는 갈색 앞머리, 헤드폰, 볼 반창고, 회색 후드티 |
-| 4 | 은서 | 끝을 붉게 물들인 단발, 빨간 눈, 명찰 단 흰 티셔츠, 은 귀걸이 |
+| 1 | Pink-haired staffer | Long pink hair, heart eyes, blouse and ID badge |
+| 2 | White-haired staffer | Fluffy white hair, amber eyes, shirt and tie, lanyard |
+| 3 | Brown-haired staffer | Shaggy brown bangs over the eyes, headphones, a bandage on the cheek, gray hoodie |
+| 4 | Black-haired staffer | Bob with red-dyed tips, red eyes, white tee with a name tag, silver earrings |
 
-다섯 번째 에이전트부터는 같은 네 명을 머리색과 눈색만 바꿔 씁니다.
+From the fifth agent on, the same four characters are reused with different hair and eye colors.
 
-- **꾸미기**: 상세 칸의 "꾸미기"를 누르면 머리색, 눈, 피부, 옷 색, 소품을 고를 수 있습니다. 고르는 즉시 지도 위 캐릭터에 입혀 보고, 저장하면 기억합니다.
-  - 머리 모양이나 옷 모양까지 바꾸면 손으로 찍은 그림 대신 부품을 조립한 그림으로 바뀝니다.
-- **이름 바꾸기**: 기본 이름은 세션 제목입니다. 제목이 없으면 작업 폴더 이름을 씁니다.
-- 꾸민 모습과 이름은 "도구 + 작업 폴더" 기준으로 기억하므로, 같은 폴더에서 Claude Code를 다시 켜도 그대로 나옵니다.
-- 기본 캐릭터 네 명은 32×44 크기 도트를 한 칸씩 찍어 그렸습니다 ([`web/src/office/character/sprites/`](web/src/office/character/sprites)).
-  - 그림은 글자 지도로 저장합니다. 글자 하나가 픽셀 하나이고, 글자마다 색이 정해져 있어 머리색·옷 색을 바꿔 칠할 수 있습니다.
-  - 머리는 캐릭터마다, 몸통은 옷마다, 팔·다리는 모두가 함께 쓰는 그림을 겹쳐 한 장을 만듭니다.
-  - 방향: 4방향 (오른쪽은 왼쪽 그림을 뒤집어 씀)
-  - 걷기: 4박자
-  - 자세: 앉기, 타이핑, 생각, 손들기, 커피, 기지개, 상자 들기
-  - 표정: 6가지
+- **Customize**: click "Customize" in the details panel to choose the hair color, eyes, skin, outfit color and accessory. The character on the map changes as you pick, and the look is remembered when you save.
+  - If you also change the hair style or outfit shape, the character switches from the hand-drawn art to the part-assembled drawing.
+- **Rename**: the default name is the session title. Without a title, the folder name is used.
+- Looks and names are remembered per "tool + working folder", so they stay the same when you restart Claude Code in the same folder.
+- The four default characters are hand-placed 32×44 pixel art ([`web/src/office/character/sprites/`](web/src/office/character/sprites)).
+  - The art is stored as character maps: one letter is one pixel, and each letter stands for a color, so hair and outfit colors can be swapped.
+  - A frame is layered from a per-character head, a per-outfit torso, and arms and legs shared by everyone.
+  - Directions: 4 (right is the mirrored left view)
+  - Walk: 4-beat cycle
+  - Poses: sit, type, think, raise hand, coffee, stretch, carry
+  - Expressions: 6
 
 ---
 
-## 팀과 회의실
+## Team and meeting room
 
-![회의실에 모인 팀과 팀 탭](docs/images/team.png)
+![The team gathered in the meeting room, with the Team tab](docs/images/team.png)
 
-Claude Code의 실험 기능인 **agent teams**를 쓰면 팀이 회의실에 모입니다.
-- 내가 대화하는 리더는 **왕관을 쓰고 CEO 자리**에 앉습니다.
-- 역할별 팀원(PO · PM · Design · FE · BE · Infra)은 테이블에 앉습니다.
+With Claude Code's experimental **agent teams** feature, the team gathers in the meeting room.
+- The lead you talk to wears a **crown and sits in the CEO seat**.
+- Teammates by role (PO · PM · Design · FE · BE · Infra) sit at the table.
 
-| 일어나는 일 | 화면 |
+| What happens | What you see |
 |---|---|
-| 내가 리더에게 지시 | 리더 머리 위에 `CEO: …` 말풍선, 팀원들이 리더 쪽을 돌아봄 |
-| 팀원끼리 메시지 | 보낸 사람에게서 받는 사람에게 편지가 날아감, `→ FE: …` 말풍선 |
-| 팀 할 일 생성·완료 | "팀" 탭 목록과 회의실 모니터 진행률 |
-| 팀원이 웹 검색 | 자료실에 다녀옴 |
-| 팀원이 리더나 다른 팀원에게서 일을 받음 | 회의실을 나가 개발실 책상 등 일하는 곳으로 흩어짐. 일을 마치고 기다릴 때는 회의실로 돌아옴 |
+| You give the lead an instruction | `CEO: …` above the lead; teammates turn toward the lead |
+| Teammates message each other | A letter flies from sender to receiver, with a `→ FE: …` bubble |
+| Team tasks are created or completed | The "Team" tab list and the progress bar on the meeting room monitor |
+| A teammate searches the web | Walks to the library and back |
+| A teammate gets work from the lead or another teammate | Leaves the meeting room to work (dev desk and so on); comes back when it is waiting again |
 
-역할마다 소품이 다릅니다.
+Each role has its own accessory.
 
-| 역할 | 소품 |
+| Role | Accessory |
 |---|---|
-| PO | 안경 |
-| PM | 리본 |
-| Design | 베레모 |
-| FE | 헤드폰 |
-| BE | 모자 |
-| Infra | 별 핀 |
+| PO | Glasses |
+| PM | Ribbon |
+| Design | Beret |
+| FE | Headphones |
+| BE | Cap |
+| Infra | Star pin |
 
-### 팀 시작하기
+### Starting a team
 
-1. 역할 정의 파일 6개를 내 프로젝트의 `.claude/agents/`에 복사합니다. 이미 같은 이름의 파일이 있으면 건너뛰고, 덮어쓰려면 `--force`를 붙입니다.
+1. Copy the six role definitions into your project's `.claude/agents/`. Existing files with the same name are skipped; add `--force` to overwrite them.
 
    ```bash
    wamad team install /path/to/my-project
    ```
 
-2. 훅을 설치합니다. 팀원의 움직임은 훅으로만 보이기 때문입니다. 아래 "훅 설치"를 참고하세요.
+2. Install the hooks, because teammate activity is only visible through hooks. See "Installing hooks" below.
 
-3. 그 프로젝트에서 agent teams를 켜고 Claude Code를 시작합니다.
+3. Start Claude Code in that project with agent teams turned on.
 
    ```bash
    CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1 claude
    ```
 
-4. 리더에게 이렇게 말합니다.
+4. Tell the lead:
 
-   > 에이전트 팀을 꾸려줘. po, pm, design, fe, be, infra 에이전트 타입으로 팀원을 하나씩 만들고, 회의실에서 내 지시를 기다리게 해. 내가 북극성 지표를 주면 역할별로 나누지 말고 팀 전체에 그대로 전달해. 일은 팀원들이 서로 메시지로 나눠 맡고, 끝나면 나에게 보고해.
+   > Create an agent team with one teammate each using the po, pm, design, fe, be and infra agent types. Have them wait in the meeting room for my instructions. When I give a north star metric, pass it to the whole team as-is instead of splitting it by role. Teammates divide the work by messaging each other and report back to me when done.
 
-5. 할 일은 북극성 지표 하나로 줍니다. 예: "첫 주 리텐션을 30%에서 40%로 올려줘". 역할별 지시는 하지 않습니다. PO가 목표와 가설을 세우고, 팀원들이 각자 맡을 일을 골라 서로 메시지로 넘겨받습니다.
+5. Give the team one north star metric, for example "raise first-week retention from 30% to 40%", not per-role instructions. The PO sets a goal and bets, and teammates claim their own work and hand off to each other by message.
 
-역할 정의는 [`team/agents/`](team/agents)에 있습니다. 예를 들어 BE는 API 계약서를 먼저 써서 FE에게 알리고, FE는 로컬 서버 주소와 PR 주소를 리더에게 보고하도록 적혀 있습니다. 필요하면 프로젝트에 복사된 파일을 고쳐 쓰면 됩니다.
+The role definitions live in [`team/agents/`](team/agents). For example, BE writes the API contract first and tells FE, and FE reports the local server and PR URLs to the lead. You can edit the copies in your project.
 
-> agent teams는 실험 기능이라 이벤트와 메시지 형식이 공식 문서에 일부만 나와 있습니다. 지금은 문서에 나온 훅 필드를 기준으로 만들었습니다. 실제 팀에서 다르게 보이면 이슈로 알려 주세요.
+> Agent teams is an experimental feature, and its event and message formats are only partly documented. This version follows the documented hook fields. If a real team looks different, please open an issue.
 
 ---
 
-## 훅 설치 (선택)
+## Installing hooks (optional)
 
-훅이 없어도 대부분의 상태는 Claude Code의 대화 기록(`~/.claude/projects/`)을 읽어서 보여 줍니다. 훅을 설치하면 아래 세 가지가 더 보입니다.
+Without hooks, most states are read from Claude Code's transcripts (`~/.claude/projects/`). With hooks, you also see these three things:
 
-- 권한 승인 대기
-- 하위 에이전트 시작·종료
-- 팀원 이벤트
+- permission prompts
+- subagent start and stop
+- teammate events
 
 ```bash
-wamad hooks install --dry-run   # 바뀔 내용만 미리 보기
-wamad hooks install             # ~/.claude/settings.json 에 훅 추가
-wamad hooks uninstall           # 훅 빼기
+wamad hooks install --dry-run   # preview the change only
+wamad hooks install             # add hooks to ~/.claude/settings.json
+wamad hooks uninstall           # remove them
 ```
 
-훅을 설치해도 안전하도록 만들었습니다.
+Installing the hooks is designed to be safe:
 
-- 이미 있던 훅은 건드리지 않습니다.
-- 바꾸기 전에 `settings.json.wamad-backup`으로 백업합니다.
-- 훅 스크립트([`hooks/claude-hook.mjs`](hooks/claude-hook.mjs))는 받은 내용을 로컬 서버로 넘기기만 하고 아무것도 출력하지 않습니다.
-- 서버가 꺼져 있어도 0.5초 안에 조용히 끝나므로 Claude Code를 막지 않습니다.
-- 설치 후 새로 시작한 Claude Code 세션부터 훅이 적용됩니다.
-
----
-
-## 개인정보와 보안
-
-- 서버는 **127.0.0.1에서만** 열립니다. 같은 네트워크의 다른 컴퓨터에서는 접속할 수 없습니다.
-- 대화 기록은 **읽기만** 합니다. 고치거나 지우지 않습니다.
-- 외부로 보내는 요청이 없습니다. 화면 글꼴(Google Fonts)만 인터넷에서 받습니다.
-- Slack이나 메일로 결과물을 전달하는 일은 에이전트가 자기 도구로 직접 합니다. 이 도구는 그 장면을 보여 주기만 합니다.
+- Your existing hooks are kept.
+- `settings.json` is backed up to `settings.json.wamad-backup` before any change.
+- The hook script ([`hooks/claude-hook.mjs`](hooks/claude-hook.mjs)) only forwards what it receives to the local server and prints nothing.
+- It exits within 0.5 seconds even if the server is down, so it never blocks Claude Code.
+- Hooks apply to Claude Code sessions started after installing.
 
 ---
 
-## 문제 해결
+## Privacy and security
 
-**에이전트가 안 보여요**
-- 지난 1시간 안에 움직인 세션만 보입니다. Claude Code에 일을 하나 시켜 보세요.
-- 서버가 켜져 있는지 확인하세요. 오른쪽 위에 "서버 연결됨"이 보여야 합니다.
+- The server listens on **127.0.0.1 only**. Other machines on your network cannot reach it.
+- Transcripts are **read only**. They are never changed or deleted.
+- Nothing is sent out. The only internet request is for the UI fonts (Google Fonts).
+- Sending results over Slack or email is done by the agents with their own tools. This tool only shows that it happened.
 
-**글자가 `[object Object]`로 보여요**
-- 서버를 새 버전으로 다시 켰는데 브라우저 탭은 예전 화면일 때 생깁니다. 탭을 새로고침하세요.
-- 이번 버전부터는 서버와 화면의 버전이 다르면 화면이 스스로 새로고침합니다.
+---
 
-**4545 포트를 이미 쓰고 있어요**
-- `WAMAD_PORT` 환경 변수로 바꿀 수 있습니다. 훅도 같은 변수를 읽습니다.
+## Troubleshooting
+
+**No agents show up**
+- Only sessions active in the last hour are shown. Give Claude Code a task.
+- Make sure the server is running. The top right should say "Connected".
+
+**Text shows up as `[object Object]`**
+- This happens when the server was restarted with a new version but the browser tab still runs the old page. Reload the tab.
+- From this version on, the page reloads itself when its version doesn't match the server.
+
+**Port 4545 is already in use**
+- Change it with the `WAMAD_PORT` environment variable. The hook reads the same variable.
 
 ```bash
 WAMAD_PORT=4600 wamad
 ```
 
-**권한 승인 대기가 안 보여요**
-- 승인 대기는 훅으로만 알 수 있습니다. `wamad hooks install`로 훅을 설치하세요.
+**Permission prompts don't show up**
+- Permission prompts are only visible through hooks. Install them with `wamad hooks install`.
 
 ---
 
-## 개발
+## Development
 
 ```bash
-npm run server      # 로컬 서버 (4545)
-npm run dev         # 화면 개발 서버 (Vite). /api 요청은 4545로 넘긴다
-npm test            # 서버 쪽 테스트
+npm run server      # local server (4545)
+npm run dev         # UI dev server (Vite); /api is proxied to 4545
+npm test            # server tests
 npm run typecheck
 ```
 
-- 모든 캐릭터 조합 보기: `npm run dev`를 켠 뒤 http://localhost:5173/dev/dolls.html
-- 기본 캐릭터 네 명 보기: http://localhost:5173/dev/cast.html
+- Every character combination: run `npm run dev`, then open http://localhost:5173/dev/dolls.html
+- The four default characters: http://localhost:5173/dev/cast.html
 
-### 구조
+### Layout
 
 ```
-shared/protocol.ts        서버와 화면이 함께 쓰는 상태 모양 (AgentSnapshot)
+shared/protocol.ts        State shape shared by server and UI (AgentSnapshot)
 server/
-  index.ts                127.0.0.1 전용 HTTP 서버 + 실시간 전송(SSE)
-  claudeHook.ts           훅 이벤트 → 에이전트 상태 (순수 함수)
-  claudeTranscript.ts     대화 기록 한 줄 → 훅과 같은 모양의 이벤트
-  transcriptWatcher.ts    ~/.claude/projects 대화 기록을 2초마다 이어 읽기
-  humanize.ts             도구 호출 → "테스트 돌리는 중" 같은 한국어·영어 문장
-  links.ts                PR 주소·로컬 서버 주소 찾기
-  team.ts                 팀 이벤트를 리더·팀원 상태로 나누기
-hooks/claude-hook.mjs     Claude Code가 실행하는 훅. 서버로 넘기기만 한다
-team/agents/              역할별 팀원 정의 (po, pm, design, fe, be, infra)
+  index.ts                127.0.0.1-only HTTP server + live updates (SSE)
+  claudeHook.ts           hook event → agent state (pure function)
+  claudeTranscript.ts     transcript line → hook-shaped events
+  transcriptWatcher.ts    tails ~/.claude/projects transcripts every 2 seconds
+  humanize.ts             tool call → Korean/English sentence like "Running tests"
+  links.ts                finds PR URLs and local server URLs
+  team.ts                 splits team events into lead and teammate states
+hooks/claude-hook.mjs     the hook Claude Code runs; it only forwards to the server
+team/agents/              role definitions (po, pm, design, fe, be, infra)
 web/src/
-  office/                 지도, 가구, 조명, 캐릭터 이동(actors), 그리기(renderer), 지도 위 글자(labels)
-  office/character/       캐릭터 그리기(doll). sprites/에 손으로 찍은 도트(머리·몸통·팔·다리·소품)
-  panels/                 카드, 알림, 상세 칸, 탭, 꾸미기, 설정
-  i18n.ts                 화면 언어(한국어·영어)
+  office/                 map, furniture, lighting, movement (actors), drawing (renderer), map text (labels)
+  office/character/       character drawing (doll); sprites/ holds the hand-placed pixel art (heads, torsos, arms, legs, accessories)
+  panels/                 cards, alerts, details, tabs, customizer, settings
+  i18n.ts                 UI language (Korean/English)
 ```
 
 ---
 
-## 앞으로 할 일
+## Roadmap
 
-- agent teams를 실제로 돌려 팀원 이벤트·메시지 형식 맞추기
-- Codex CLI, Gemini CLI 지원 (상태 모양은 도구와 무관하게 만들어 두었고, 각 도구의 세션 기록을 읽는 부분이 필요)
-- 테마 교체 (다른 회사 지도, 다른 캐릭터 세트)
-- 사용량 한도 표시
+- Match the real agent teams event and message formats by running an actual team
+- Codex CLI and Gemini CLI support (the state shape is tool-agnostic; each tool needs a transcript reader)
+- Swappable themes (other office maps, other character sets)
+- Usage limit display

@@ -14,7 +14,7 @@ canvas{image-rendering:pixelated;display:block}
 import { composeCharacter } from '../src/office/character/sprites/compose.ts';
 import { CHARACTER_ART } from '../src/office/character/sprites/index.ts';
 import { PRESETS } from '../src/office/look.ts';
-const id = new URLSearchParams(location.search).get('c') ?? 'rabi';
+const id = new URLSearchParams(location.search).get('c') ?? 'brown';
 const look = PRESETS.find((p) => p.id === id).look;
 const art = CHARACTER_ART[id];
 const S = 4;

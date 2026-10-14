@@ -1,7 +1,7 @@
-// 라비 (서버 개발자): 눈을 덮는 갈색 앞머리, 헤드폰, 볼 반창고, 회색 후드티
+// 갈색 머리 사원: 눈을 덮는 갈색 앞머리, 헤드폰, 볼 반창고, 회색 후드티
 import type { CharacterArt } from './types.ts';
 
-export const RABI: CharacterArt = {
+export const BROWN: CharacterArt = {
   head: {
     down: [
       '.................oo.............',
