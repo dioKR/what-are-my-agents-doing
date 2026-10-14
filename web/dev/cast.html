@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><title>기본 캐릭터 소개</title>
+<style>
+body{background:#efe6d2;color:#2a2228;font:15px 'Gowun Dodum',sans-serif;margin:0;padding:24px;width:fit-content}
+canvas{image-rendering:pixelated;display:block}
+#out{display:flex;gap:28px}
+figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:8px}
+.frames{display:flex;gap:4px}
+figcaption{text-align:center} figcaption small{display:block;color:#7a6f62;font-size:12px}
+</style></head>
+<body><div id="out"></div>
+<script type="module">
+// README용 캐릭터 소개 그림: 기본 캐릭터 네 명의 앞·옆·걷기 모습
+import { dollFrame } from '../src/office/character/doll.ts';
+import { PRESETS } from '../src/office/look.ts';
+const SCALE = 3;
+const out = document.getElementById('out');
+const big = (frame) => {
+  const c = document.createElement('canvas');
+  c.width = frame.width * SCALE; c.height = frame.height * SCALE;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(frame, 0, 0, c.width, c.height);
+  return c;
+};
+for (const preset of PRESETS) {
+  const fig = document.createElement('figure');
+  const frames = document.createElement('div'); frames.className = 'frames';
+  [['down', 'stand', 'happy'], ['right', 'walk1', 'normal'], ['down', 'type1', 'focus']].forEach(([f, p, e]) => frames.appendChild(big(dollFrame(preset.look, f, p, e))));
+  const cap = document.createElement('figcaption');
+  cap.innerHTML = `${preset.label.ko}<small>${preset.label.en}</small>`;
+  fig.append(frames, cap);
+  out.appendChild(fig);
+}
+</script></body></html>

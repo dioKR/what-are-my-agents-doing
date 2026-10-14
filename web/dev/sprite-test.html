@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><title>손으로 찍은 캐릭터 시트</title>
+<style>
+body{background:#efe6d2;color:#2a2228;font:13px sans-serif;margin:0;padding:16px;width:fit-content}
+canvas{image-rendering:pixelated;display:block}
+.row{display:flex;gap:10px;align-items:flex-end;margin-bottom:10px}
+.row>span{width:80px}
+.floor{background:#8a5a36;padding:12px;display:flex;gap:16px;align-items:flex-end;margin-top:8px}
+</style></head>
+<body><div id="out"></div><div class="floor" id="floor"></div>
+<script type="module">
+// 손으로 찍은 캐릭터의 모든 방향 · 자세 · 표정 · 소품을 한 장에 펼친다
+import { composeCharacter } from '../src/office/character/sprites/compose.ts';
+import { CHARACTER_ART } from '../src/office/character/sprites/index.ts';
+import { PRESETS } from '../src/office/look.ts';
+const id = new URLSearchParams(location.search).get('c') ?? 'rabi';
+const look = PRESETS.find((p) => p.id === id).look;
+const art = CHARACTER_ART[id];
+const S = 4;
+const big = (c, s = S) => { const o = document.createElement('canvas'); o.width = c.width * s; o.height = c.height * s; const g = o.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(c, 0, 0, o.width, o.height); return o; };
+const out = document.getElementById('out');
+const line = (label, frames) => { const r = document.createElement('div'); r.className = 'row'; const s = document.createElement('span'); s.textContent = label; r.append(s, ...frames.map((f) => big(f))); out.append(r); };
+for (const f of ['down', 'up', 'left', 'right']) line(f, ['stand', 'walk1', 'walk2', 'type1', 'type2', 'sit', 'think', 'raise', 'stretch'].map((p) => composeCharacter(art, look, f, p, 'normal')));
+line('표정', ['normal', 'blink', 'happy', 'focus', 'panic', 'sleepy'].flatMap((e) => [composeCharacter(art, look, 'down', 'stand', e), composeCharacter(art, look, 'left', 'stand', e)]));
+line('소품', ['crown', 'glasses', 'ribbon', 'beret', 'cap', 'headphones', 'starclip', 'sprout', 'mailcap'].map((a) => composeCharacter(art, { ...look, accessory: a }, 'down', 'stand', 'normal')));
+line('소품 옆', ['crown', 'glasses', 'ribbon', 'beret', 'cap', 'starclip', 'mailcap'].map((a) => composeCharacter(art, { ...look, accessory: a }, 'left', 'stand', 'normal')));
+for (const f of ['down', 'left', 'up']) for (const p of ['stand', 'walk1', 'stand', 'walk2']) document.getElementById('floor').append(big(composeCharacter(art, look, f, p, 'normal'), 2));
+</script></body></html>

@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ko">
+<head><meta charset="utf-8"><title>캐릭터 그림 확인</title>
+<style>body{background:#5a8f3c;color:#fff;font:12px sans-serif;margin:12px} canvas{image-rendering:pixelated} .row{display:flex;gap:6px;align-items:end;margin-bottom:6px} .row span{width:70px}</style></head>
+<body><div id="out"></div>
+<script type="module">
+import { dollFrame } from '../src/office/character/doll.ts';
+import { PRESETS } from '../src/office/look.ts';
+const looks = [...PRESETS.map((p) => p.look), { ...PRESETS[0].look, hairStyle: 'short', outfit: 'tee', shirt: '#e07a3c', accessory: 'beret' }];
+const out = document.getElementById('out');
+const S = 4;
+const put = (row, cv) => { const c = document.createElement('canvas'); c.width = cv.width * S; c.height = cv.height * S; const g = c.getContext('2d'); g.imageSmoothingEnabled = false; g.drawImage(cv, 0, 0, c.width, c.height); row.appendChild(c); };
+const line = (label, frames) => { const row = document.createElement('div'); row.className = 'row'; const s = document.createElement('span'); s.textContent = label; row.appendChild(s); frames.forEach((f) => put(row, f)); out.appendChild(row); };
+for (const look of looks) {
+  line(look.hairStyle + '/' + look.outfit, ['down', 'up', 'left', 'right'].flatMap((f) => ['stand', 'walk1', 'walk2'].map((p) => dollFrame(look, f, p, 'normal'))));
+}
+const L = looks[0];
+line('poses', ['sit', 'type1', 'type2', 'think', 'raise', 'drink', 'stretch', 'carry'].map((p) => dollFrame(L, 'down', p, 'normal')));
+line('side poses', ['type1', 'think', 'raise', 'drink', 'stretch'].map((p) => dollFrame(L, 'left', p, 'normal')));
+line('faces', ['normal', 'blink', 'focus', 'happy', 'panic', 'sleepy'].map((e) => dollFrame(L, 'down', 'stand', e)));
+</script></body></html>

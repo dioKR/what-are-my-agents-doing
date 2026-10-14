@@ -1,0 +1,29 @@
+{
+  "name": "wamad",
+  "version": "0.1.0",
+  "description": "What Are My Agents Doing? — 내 컴퓨터에서 돌아가는 코딩 에이전트들을 픽셀 회사로 보여주는 로컬 시각화 도구",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "wamad": "bin/wamad.mjs"
+  },
+  "engines": {
+    "node": ">=23.6"
+  },
+  "scripts": {
+    "start": "vite build && node server/index.ts",
+    "server": "node server/index.ts",
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "node --test \"server/**/*.test.ts\"",
+    "hooks:install": "node scripts/install-claude-hooks.mjs",
+    "hooks:uninstall": "node scripts/install-claude-hooks.mjs --uninstall",
+    "team:install": "node scripts/install-team.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.4"
+  }
+}

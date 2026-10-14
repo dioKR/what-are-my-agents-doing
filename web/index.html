@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title data-i18n="app.title">What Are My Agents Doing?</title>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Gowun+Dodum&display=swap">
+</head>
+<body>
+  <main class="game">
+    <header class="topline">
+      <h1 data-i18n="app.title">What Are My Agents Doing?</h1>
+      <div class="toprow">
+        <p><span id="connection"></span></p>
+        <details class="settings" id="settings">
+          <summary data-i18n-aria="settings.open" data-i18n-title="settings.open">
+            <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M7 1h2v2h2V2h1v1h1v1h-1v2h2v2h-2v2h1v1h-1v1h-1v-1H9v2H7v-2H5v1H4v-1H3v-1h1V9H2V7h2V5H3V4h1V3h1v1h2zm0 4v1H6v4h1v1h2v-1h1V6H9V5z"/></svg>
+          </summary>
+          <div class="settings-panel" role="group" data-i18n-aria="settings.title">
+            <p class="settings-label" data-i18n="settings.time"></p>
+            <div class="timemode" role="group" data-i18n-aria="settings.time">
+              <button type="button" data-time="auto" aria-pressed="true" data-i18n="time.auto"></button>
+              <button type="button" data-time="day" aria-pressed="false" data-i18n="time.day"></button>
+              <button type="button" data-time="evening" aria-pressed="false" data-i18n="time.evening"></button>
+              <button type="button" data-time="night" aria-pressed="false" data-i18n="time.night"></button>
+            </div>
+            <p class="settings-label" data-i18n="settings.lang"></p>
+            <div class="timemode" role="group" data-i18n-aria="settings.lang">
+              <button type="button" data-lang="ko" aria-pressed="false">한국어</button>
+              <button type="button" data-lang="en" aria-pressed="false">English</button>
+            </div>
+          </div>
+        </details>
+      </div>
+    </header>
+
+    <div class="workspace">
+    <div class="mapwrap" id="mapwrap">
+      <div class="mapbox">
+        <nav class="agentbar" id="agentbar" aria-label="Agents"></nav>
+        <div class="stage" id="stage">
+          <canvas id="map" width="608" height="432" data-i18n-aria="map.aria"></canvas>
+          <div class="labels" id="labels" aria-hidden="true"></div>
+          <div class="alerts" id="alerts" aria-live="polite"></div>
+          <div class="empty" id="empty" hidden>
+            <h2 data-i18n="empty.title"></h2>
+            <ol>
+              <li data-i18n="empty.step1"></li>
+              <li data-i18n="empty.step2"></li>
+            </ol>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="side">
+      <section class="inspector" id="inspector" aria-label="Selected agent"></section>
+      <section class="tabs">
+        <div class="tablist" role="tablist">
+          <button type="button" role="tab" aria-selected="true" aria-controls="tabpanel" data-tab="activity" data-i18n="tab.activity"></button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="tabpanel" data-tab="team" data-i18n="tab.team"></button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="tabpanel" data-tab="links" data-i18n="tab.links"></button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="tabpanel" data-tab="mail" data-i18n="tab.mail"></button>
+          <button type="button" role="tab" aria-selected="false" aria-controls="tabpanel" data-tab="todos" data-i18n="tab.todos"></button>
+        </div>
+        <div class="tabpanel" id="tabpanel" role="tabpanel"></div>
+      </section>
+    </aside>
+    </div>
+  </main>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

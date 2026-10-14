@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.DS_Store
+*.log
+# 이 컴퓨터에서 팀을 돌리려고 복사해 둔 역할 정의 (원본은 team/agents/)
+.claude/
