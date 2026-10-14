@@ -4,6 +4,7 @@ import { basename, relative, isAbsolute } from 'node:path';
 import { STUCK_FAIL_STREAK, type Activity, type AgentSnapshot, type MailRecord, type TodoItem } from '../shared/protocol.ts';
 import { PHRASES, cleanPrompt, firstParagraph, humanizeTool, mailSummary, messageSent, requestReceived } from './humanize.ts';
 import { extractLinks } from './links.ts';
+import { projectDirOf } from './projectDir.ts';
 import type { AgentLink, LocalText } from '../shared/protocol.ts';
 
 export interface ClaudeHookPayload {
@@ -56,6 +57,7 @@ export function createAgent(payload: ClaudeHookPayload, now: number): AgentSnaps
     id: payload.session_id,
     tool: 'claude-code',
     cwd: payload.cwd ?? '',
+    projectDir: projectDirOf(payload.cwd, payload.transcript_path),
     title: null,
     parentId: null,
     role: null,
@@ -82,7 +84,9 @@ export function createAgent(payload: ClaudeHookPayload, now: number): AgentSnaps
 /** 훅 이벤트 하나를 반영한 새 상태를 돌려준다. prev는 바꾸지 않는다. */
 export function applyClaudeHook(prev: AgentSnapshot | undefined, payload: ClaudeHookPayload, now: number): AgentSnapshot {
   const base = prev ?? createAgent(payload, now);
-  const next: AgentSnapshot = { ...base, cwd: payload.cwd ?? base.cwd, title: payload.session_title ?? base.title, updatedAt: now };
+  // 작업 폴더는 cd 할 때마다 바뀌지만, 프로젝트 폴더는 한 번 알면 그대로 둔다
+  const projectDir = base.projectDir ?? projectDirOf(payload.cwd, payload.transcript_path);
+  const next: AgentSnapshot = { ...base, cwd: payload.cwd ?? base.cwd, projectDir, title: payload.session_title ?? base.title, updatedAt: now };
 
   switch (payload.hook_event_name) {
     case 'SessionStart':

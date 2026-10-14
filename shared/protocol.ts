@@ -82,7 +82,10 @@ export interface SubagentInfo {
 export interface AgentSnapshot {
   id: string;
   tool: ToolKind;
+  /** 지금 작업 중인 폴더 (에이전트가 cd 하면 바뀐다) */
   cwd: string;
+  /** 세션을 시작한 프로젝트 폴더. 이름·꾸민 모습·상점 착용을 이 폴더 기준으로 기억한다. 모르면 null (그때는 cwd를 쓴다) */
+  projectDir: string | null;
   /** Claude Code에서 붙은 세션 제목 (예: "A/B 테스트 설계 및 구현"). 모르면 null */
   title: string | null;
   /** 팀원이면 리더(나와 대화하는 세션)의 id. 혼자 일하는 에이전트면 null */

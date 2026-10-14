@@ -113,3 +113,11 @@ test('에이전트 글과 명령 결과에 나온 링크가 쌓이고, 같은 �
   );
   assert.deepEqual(agent.links.map((l) => l.label.ko), ['PR #7 · web', '로컬 서버 :3000']);
 });
+
+test('에이전트가 하위 폴더로 cd 해도 프로젝트 폴더는 그대로 (이름·꾸민 모습 기준이 흔들리지 않게)', () => {
+  const transcript = '/Users/yh/.claude/projects/-Users-yh-Workspace-my-app/s.jsonl';
+  const start = applyClaudeHook(undefined, { session_id: 's', hook_event_name: 'SessionStart', cwd: '/Users/yh/Workspace/my-app', transcript_path: transcript }, 1);
+  const moved = applyClaudeHook(start, { session_id: 's', hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: 'npm test' }, cwd: '/Users/yh/Workspace/my-app/packages/web', transcript_path: transcript }, 2);
+  assert.equal(moved.cwd, '/Users/yh/Workspace/my-app/packages/web');
+  assert.equal(moved.projectDir, '/Users/yh/Workspace/my-app');
+});

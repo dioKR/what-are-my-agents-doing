@@ -20,8 +20,11 @@ function readSaved(): Record<string, string> {
   }
 }
 
-/** 이름·꾸미기를 기억하는 기준: 같은 도구 + 같은 작업 폴더면 같은 에이전트로 본다. 팀원은 팀원 이름까지 본다. */
-export const profileKey = (agent: AgentSnapshot) => `${agent.tool}:${agent.cwd}${agent.parentId ? `:${agent.memberName ?? agent.role}` : ''}`;
+/**
+ * 이름·꾸미기·상점 착용을 기억하는 기준: 같은 도구 + 같은 프로젝트 폴더면 같은 에이전트로 본다. 팀원은 팀원 이름까지 본다.
+ * 작업 중 하위 폴더로 cd 해도 바뀌지 않도록 그 순간의 작업 폴더(cwd)가 아니라 프로젝트 폴더를 쓴다.
+ */
+export const profileKey = (agent: AgentSnapshot) => `${agent.tool}:${agent.projectDir ?? agent.cwd}${agent.parentId ? `:${agent.memberName ?? agent.role}` : ''}`;
 
 const ROLE_LABEL: Record<string, string> = { po: 'PO', pm: 'PM', design: 'Design', fe: 'FE', be: 'BE', infra: 'Infra', qa: 'QA', data: 'Data' };
 export const roleLabel = (role: string | null) => (role ? ROLE_LABEL[role] ?? role : '');
@@ -44,7 +47,7 @@ export function displayName(agent: AgentSnapshot, all: Iterable<AgentSnapshot>):
       return [role, named].filter(Boolean).join(' · ') || 'teammate';
     }
     if (a.title) return a.title;
-    return agents.filter((b) => b.tool === a.tool).length > 1 ? folderName(a.cwd) : TOOL_LABEL[a.tool];
+    return agents.filter((b) => b.tool === a.tool).length > 1 ? folderName(a.projectDir ?? a.cwd) : TOOL_LABEL[a.tool];
   };
   const mine = baseName(agent);
   const sameNameBefore = agents.slice(0, agents.indexOf(agent)).filter((a) => baseName(a) === mine).length;
