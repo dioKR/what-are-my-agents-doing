@@ -5,6 +5,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from 'node:ht
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import { PROTOCOL_VERSION, type AgentSnapshot, type ServerMessage } from '../shared/protocol.ts';
+import type { RecordsState } from '../shared/records.ts';
 import { applyClaudeHook, isClaudeHookPayload, type ClaudeHookPayload } from './claudeHook.ts';
 import { ACTIVE_WINDOW_MS, watchTranscripts } from './transcriptWatcher.ts';
 import { routeEvent } from './team.ts';
@@ -12,6 +13,8 @@ import { readContextUsedRatio } from './transcript.ts';
 import { buy, earn, equip, rewardsFor, WalletStore, type ShopResult } from './wallet.ts';
 import { staticFilePath } from './staticPath.ts';
 import type { RewardReason, ShopSlot } from '../shared/shop.ts';
+import { profileKey } from '../shared/profile.ts';
+import { countToolCall, countTurn, isBusy, noteBusyCount, noteLifetime, RecordsStore, TurnTracker, whoOf } from './records.ts';
 
 const HOST = '127.0.0.1';
 const MAX_BODY_BYTES = 1024 * 1024;
@@ -21,7 +24,9 @@ const CONTEXT_REFRESH_MS = 2_000;
 /** 화면 파일(vite build 결과) 폴더. startServer()가 정한다 */
 let webRoot = '';
 const wallet = new WalletStore();
-/** 서버를 켠 시각. 이보다 앞선 기록(켤 때 몰아 읽는 지난 대화)으로는 코인을 주지 않는다 */
+const records = new RecordsStore();
+const turns = new TurnTracker();
+/** 서버를 켠 시각. 이보다 앞선 기록(켤 때 몰아 읽는 지난 대화)으로는 코인을 주지 않고 작업 기록도 세지 않는다 (켤 때마다 두 번 세지 않게) */
 let startedAt = Date.now();
 
 const agents = new Map<string, AgentSnapshot>();
@@ -64,6 +69,8 @@ function applyEvents(events: ClaudeHookPayload[], source: 'hook' | 'transcript')
   const now = Date.now();
   const changed = new Map<string, AgentSnapshot>();
   const rewards = new Map<string, RewardReason[]>();
+  let nextRecords = records.state;
+  let sawLiveEvent = false;
   for (const event of events) {
     const route = routeEvent(event);
     if (!route) continue;
@@ -71,13 +78,16 @@ function applyEvents(events: ClaudeHookPayload[], source: 'hook' | 'transcript')
     else if (hookKeys.has(route.key) && !TRANSCRIPT_ONLY_EVENTS.has(event.hook_event_name)) continue;
     // 팀원은 자기 기록 파일(대화 기록 쪽)로만 컨텍스트 사용량을 잰다. 훅이 주는 경로는 리더 것일 수 있다.
     if (event.transcript_path && (!route.member || source === 'transcript')) transcriptPaths.set(route.key, event.transcript_path);
+    const at = event.observed_at ?? now;
     const prev = changed.get(route.key) ?? agents.get(route.key);
-    const next = applyClaudeHook(prev, event, event.observed_at ?? now);
+    const next = applyClaudeHook(prev, event, at);
     changed.set(route.key, route.member
       ? { ...next, id: route.key, parentId: route.member.parentId, role: route.member.role ?? next.role, memberName: route.member.memberName ?? next.memberName }
       : next);
-    const isLive = (event.observed_at ?? now) >= startedAt;
-    if (isLive) rewards.set(route.key, [...(rewards.get(route.key) ?? []), ...rewardsFor(prev, next, event)]);
+    if (at < startedAt) continue; // 켤 때 몰아 읽은 지난 대화로는 코인을 주지 않고 기록도 세지 않는다
+    sawLiveEvent = true;
+    rewards.set(route.key, [...(rewards.get(route.key) ?? []), ...rewardsFor(prev, next, event)]);
+    nextRecords = recordWork(nextRecords, route.key, changed.get(route.key)!, event, at);
   }
   for (const next of changed.values()) {
     // 기록 파일은 최근에 바뀌었어도 마지막 실제 활동이 오래전이면 보여주지 않는다
@@ -87,13 +97,38 @@ function applyEvents(events: ClaudeHookPayload[], source: 'hook' | 'transcript')
     void refreshContext(next.id, now);
   }
   for (const [id, reasons] of rewards) payCoins(id, reasons, now);
+  setRecords(recordOffice(nextRecords, changed.values(), sawLiveEvent, now));
+}
+
+/** 작업 기록: 도구를 쓴 횟수, 끝난 작업의 걸린 시간 */
+function recordWork(state: RecordsState, key: string, agent: AgentSnapshot, event: ClaudeHookPayload, at: number): RecordsState {
+  let next = state;
+  if (event.hook_event_name === 'PreToolUse') next = countToolCall(next, at);
+  const finished = turns.apply(key, event, at);
+  if (finished) next = countTurn(next, { ...finished, who: whoOf(agent), nameKey: profileKey(agent), at });
+  return next;
+}
+
+/** 사무실 기록: 동시에 일한 에이전트 수, 가장 오래 살아 있던 에이전트 */
+function recordOffice(state: RecordsState, changedAgents: Iterable<AgentSnapshot>, sawLiveEvent: boolean, now: number): RecordsState {
+  // 켤 때 몰아 읽은 지난 대화의 마지막 상태는 지금 일하는 중인지 알 수 없어서, 실시간 이벤트가 있을 때만 센다
+  let next = sawLiveEvent ? noteBusyCount(state, [...agents.values()].filter(isBusy).length, now) : state;
+  for (const agent of changedAgents) next = noteLifetime(next, agent);
+  return next;
+}
+
+/** 기록이 바뀌었으면 저장하고 화면에 알린다 */
+function setRecords(next: RecordsState): void {
+  if (next === records.state) return;
+  records.set(next);
+  broadcast({ type: 'records', records: next });
 }
 
 /** 번 코인을 지갑에 넣고, 화면에 지갑과 "+코인"을 알린다 */
 function payCoins(agentId: string, reasons: RewardReason[], now: number): void {
   if (!reasons.length) return;
   const agent = agents.get(agentId);
-  const who = agent?.title ?? agent?.memberName ?? agent?.cwd.split(/[\\/]/).pop() ?? agentId;
+  const who = agent ? whoOf(agent) : agentId;
   const result = earn(wallet.state, agentId, who, reasons, now);
   wallet.set(result.state);
   broadcast({ type: 'wallet', wallet: wallet.state });
@@ -131,6 +166,7 @@ function openStream(req: IncomingMessage, res: ServerResponse): void {
   res.writeHead(200, { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   res.write(`data: ${JSON.stringify({ type: 'snapshot', protocol: PROTOCOL_VERSION, agents: [...agents.values()] } satisfies ServerMessage)}\n\n`);
   res.write(`data: ${JSON.stringify({ type: 'wallet', wallet: wallet.state } satisfies ServerMessage)}\n\n`);
+  res.write(`data: ${JSON.stringify({ type: 'records', records: records.state } satisfies ServerMessage)}\n\n`);
   listeners.add(res);
   req.on('close', () => listeners.delete(res));
 }
@@ -170,6 +206,8 @@ const handleRequest = async (req: IncomingMessage, res: ServerResponse): Promise
       const body = (await readJsonBody(req)) as { key?: string; slot?: ShopSlot; itemId?: string | null };
       if (!body.key || (body.slot !== 'head' && body.slot !== 'pet')) { res.writeHead(400).end(); return; }
       applyShopResult(equip(wallet.state, body.key, body.slot, body.itemId ?? null), res);
+    } else if (req.method === 'GET' && url.pathname === '/api/records') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(records.state));
     } else if (req.method === 'GET' && url.pathname === '/api/wallet') {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(wallet.state));
     } else if (req.method === 'GET' && url.pathname === '/api/agents') {
@@ -205,6 +243,7 @@ export async function startServer(options: StartOptions): Promise<RunningServer>
   webRoot = options.webRoot;
   startedAt = Date.now();
   await wallet.load();
+  await records.load();
   const server = createServer((req, res) => void handleRequest(req, res));
   return new Promise<RunningServer>((resolve, reject) => {
     server.once('error', reject);

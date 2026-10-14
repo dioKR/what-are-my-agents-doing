@@ -24,6 +24,7 @@ import { applyStaticTexts, currentLang, setLang, t, type Lang } from './i18n.ts'
 import type { ShopSlot } from '../../shared/shop.ts';
 import { PetKeeper } from './office/pets/pets.ts';
 import { renderShop } from './shop/shopPanel.ts';
+import { renderRecords, setRecords } from './records/recordsPanel.ts';
 import { activeCoinPops, addCoinPop, buyItem, currentWallet, equipItem, equippedOf, setWallet } from './shop/wallet.ts';
 
 const MAP_PX_W = MAP_W * TILE;
@@ -45,7 +46,7 @@ if (isDesktopApp) byId('hookStep').dataset.i18n = 'empty.step2.desktop';
 const els = {
   stage: byId('stage'), mapWrap: byId('mapwrap'), labels: byId('labels'), empty: byId('empty'),
   agentBar: byId('agentbar'), alerts: byId('alerts'), inspector: byId('inspector'), tabPanel: byId('tabpanel'),
-  connection: byId('connection'), coinCount: byId('coinCount'), shop: byId<HTMLDialogElement>('shop')
+  connection: byId('connection'), coinCount: byId('coinCount'), shop: byId<HTMLDialogElement>('shop'), records: byId<HTMLDialogElement>('records')
 };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -82,6 +83,10 @@ function applyMessage(message: ServerMessage): void {
   if (message.type === 'wallet') {
     setWallet(message.wallet);
     agents.forEach((agent) => director.refreshLook(agent)); // 머리 장식을 바꿨으면 바로 입힌다
+    return;
+  }
+  if (message.type === 'records') {
+    setRecords(message.records);
     return;
   }
   if (message.type === 'reward') {
@@ -131,6 +136,7 @@ function refreshPanels(): void {
   els.connection.textContent = connected ? t('app.connected', { n: agents.size }) : t('app.connecting');
   els.coinCount.textContent = String(currentWallet().coins);
   if (els.shop.open) renderShop(els.shop, shopTab, views, selected);
+  if (els.records.open) renderRecords(els.records, views, Date.now());
 }
 
 /** 언어를 바꾸면 고정 글자와 패널을 다시 그린다 */
@@ -151,6 +157,16 @@ function fitToWidth(): void {
 }
 
 // ---------- 입력 ----------
+// 기록실: 열기 · 닫기
+document.addEventListener('click', (event) => {
+  if (event.target === els.records) { els.records.close(); return; } // 창 바깥(어두운 배경)을 누르면 닫는다
+  const target = (event.target as HTMLElement).closest<HTMLElement>('[data-records-open],[data-records-close]');
+  if (!target) return;
+  if (target.hasAttribute('data-records-open')) els.records.showModal();
+  else els.records.close();
+  refreshPanels();
+});
+
 // 꾸미기 상점: 열기 · 닫기 · 탭 · 사기 · 입히기 · 벗기기 (캐릭터 고르기는 아래 공통 처리의 data-select가 맡는다)
 document.addEventListener('click', (event) => {
   if (event.target === els.shop) { els.shop.close(); return; } // 창 바깥(어두운 배경)을 누르면 닫는다

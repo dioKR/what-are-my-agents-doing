@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.3.0
+
+- **Records (trophy icon next to the gear).** See the records your agents have set: the most agents working at once, the longest and fastest task, and the longest-surviving agent, each with who set it, the request and when. It also shows all-time work (tasks finished, tool calls, time spent) and the most senior and newest agent in the office now. A task runs from your request to the end of the agent's reply; replies that used no tools are left out. Records are saved in `~/.wamad/records.json` and, like coins, only count while the app is running.
+- CI now opens the page and the desktop app on Windows too, and installs the real Windows installer after each release to check that the app window shows the office.
+
 ## 0.2.2
 
 - **Fixed: Windows showed "화면 파일이 없습니다" instead of the office.** The server turned `/` into `\` with Windows path rules, so it tried to open the folder instead of the home page. File paths in "doing now" also show with `/` on Windows now.
