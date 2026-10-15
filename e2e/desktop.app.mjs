@@ -48,6 +48,11 @@ test('앱 창에 오류 화면이 아니라 사무실 지도가 그려진다', a
   assert.ok(painted > 100, `칠해진 픽셀이 너무 적음: ${painted}`);
 });
 
+test('빈 화면 안내가 터미널 명령 대신 앱 아이콘 메뉴를 알려 준다', async () => {
+  const hint = await window.textContent('#hookStep');
+  assert.ok(!hint.includes('hooks install'), `앱인데 터미널 명령을 안내함: ${hint}`);
+});
+
 test('앱 화면에 오류가 없다', () => {
   assert.deepEqual(pageErrors, []);
 });

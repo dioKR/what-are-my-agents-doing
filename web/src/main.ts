@@ -39,6 +39,10 @@ const canvas = byId<HTMLCanvasElement>('map');
 canvas.width = VIEW.w * TILE;
 canvas.height = VIEW.h * TILE;
 const g = canvas.getContext('2d')!;
+// 데스크톱 앱에는 터미널 명령이 없으니, 훅 설치를 앱 아이콘 메뉴로 안내한다
+const isDesktopApp = navigator.userAgent.includes('Electron/');
+if (isDesktopApp) byId('hookStep').dataset.i18n = 'empty.step2.desktop';
+
 const els = {
   stage: byId('stage'), mapWrap: byId('mapwrap'), labels: byId('labels'), empty: byId('empty'),
   agentBar: byId('agentbar'), alerts: byId('alerts'), inspector: byId('inspector'), tabPanel: byId('tabpanel'),

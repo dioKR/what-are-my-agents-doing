@@ -13,8 +13,10 @@ on:
       tag:
         description: 검사할 릴리스 태그 (비우면 최신)
         required: false
+  # PR에서는 이 워크플로 파일을 고쳤을 때만 돈다. 이미 나온 설치 파일을 받아 검사하므로,
+  # 아직 릴리스되지 않은 화면 변경을 검사하는 PR에서 돌리면 당연히 실패한다
   pull_request:
-    paths: [.github/workflows/windows-installer.yml, e2e/desktop.app.mjs]
+    paths: [.github/workflows/windows-installer.yml]
 
 jobs:
   install-and-run:
