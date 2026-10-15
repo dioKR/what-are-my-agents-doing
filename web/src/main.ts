@@ -25,6 +25,8 @@ import type { ShopSlot } from '../../shared/shop.ts';
 import { PetKeeper } from './office/pets/pets.ts';
 import { renderShop } from './shop/shopPanel.ts';
 import { renderRecords, setRecords } from './records/recordsPanel.ts';
+import { deleteSheet, downloadSheetTemplate, syncCustomCharacters, uploadSheet, type UploadResult } from './characters/library.ts';
+import { SHEET_CHARACTER_PREFIX } from '../../shared/characterSheet.ts';
 import { activeCoinPops, addCoinPop, buyItem, currentWallet, equipItem, equippedOf, setWallet } from './shop/wallet.ts';
 
 const MAP_PX_W = MAP_W * TILE;
@@ -68,6 +70,8 @@ let selectedId: string | null = null;
 let renamingId: string | null = null;
 /** 꾸미는 중인 에이전트와 고르는 중인 생김새 (저장 전) */
 let customizing: { id: string; draft: DollLook } | null = null;
+/** 캐릭터 시트를 올린 결과 한 줄. 꾸미기를 닫으면 지운다 */
+let sheetStatus: string | null = null;
 const TIME_MODES: readonly TimeMode[] = ['auto', 'day', 'evening', 'night'];
 const timeParam = new URLSearchParams(location.search).get('time') as TimeMode | null;
 /** ?time=night 처럼 주소로 시간대를 고정해 열 수도 있다 (캡처·공유용) */
@@ -83,6 +87,11 @@ function applyMessage(message: ServerMessage): void {
   if (message.type === 'wallet') {
     setWallet(message.wallet);
     agents.forEach((agent) => director.refreshLook(agent)); // 머리 장식을 바꿨으면 바로 입힌다
+    return;
+  }
+  if (message.type === 'characters') {
+    // 시트 그림을 다 불러오면 지도 · 카드의 캐릭터를 다시 그린다
+    syncCustomCharacters(message.characters, refreshPanels);
     return;
   }
   if (message.type === 'records') {
@@ -129,7 +138,7 @@ function refreshPanels(): void {
   renderAgentBar(els.agentBar, views, selectedId);
   renderAlerts(els.alerts, views, Date.now());
   const selected = views.find((v) => v.agent.id === selectedId);
-  if (customizing && selected && customizing.id === selected.agent.id) renderLookEditor(els.inspector, selected, customizing.draft);
+  if (customizing && selected && customizing.id === selected.agent.id) renderLookEditor(els.inspector, selected, customizing.draft, sheetStatus);
   else renderInspector(els.inspector, selected, renamingId === selectedId);
   renderLogTab(els.tabPanel, tab, views, selected);
   els.empty.hidden = agents.size > 0;
@@ -197,11 +206,7 @@ document.addEventListener('click', (event) => {
   }
   if (target.hasAttribute('data-look-cancel')) stopCustomizing();
   const preset = PRESETS.find((p) => p.id === target.dataset.lookPreset);
-  if (preset && customizing) {
-    customizing = { ...customizing, draft: { ...preset.look } };
-    const actor = director.actors.get(customizing.id);
-    if (actor) actor.look = toLook(customizing.draft);
-  }
+  if (preset) tryOn({ ...preset.look });
   if (target.dataset.lang === 'ko' || target.dataset.lang === 'en') switchLang(target.dataset.lang);
   if (target.dataset.time) {
     timeMode = target.dataset.time as TimeMode;
@@ -217,15 +222,55 @@ document.addEventListener('click', (event) => {
   if (renamingId) byId<HTMLInputElement>('renameInput')?.select();
 });
 
+/** 꾸미는 중인 캐릭터에 저장 전 모습을 입혀 본다 */
+function tryOn(draft: DollLook): void {
+  if (!customizing) return;
+  customizing = { ...customizing, draft };
+  const actor = director.actors.get(customizing.id);
+  if (actor) actor.look = toLook(draft);
+}
+
 /** 저장하지 않고 꾸미기를 닫으면 저장된(또는 기본) 모습으로 되돌린다 */
 function stopCustomizing(): void {
   const agent = customizing && agents.get(customizing.id);
   if (agent) director.refreshLook(agent);
   customizing = null;
+  sheetStatus = null;
+}
+
+// 캐릭터 시트: 올린 캐릭터 입혀 보기 · 지우기 · 템플릿 내려받기
+document.addEventListener('click', (event) => {
+  const target = (event.target as HTMLElement).closest<HTMLElement>('[data-look-sheet],[data-sheet-delete],[data-sheet-template]');
+  if (!target || !customizing) return;
+  if (target.dataset.lookSheet) tryOn({ ...customizing.draft, character: `${SHEET_CHARACTER_PREFIX}${target.dataset.lookSheet}` });
+  if (target.dataset.sheetDelete) void deleteSheet(target.dataset.sheetDelete);
+  if (target.hasAttribute('data-sheet-template')) downloadSheetTemplate(customizing.draft);
+  refreshPanels();
+});
+
+// 캐릭터 시트 올리기: 검사를 통과하면 올린 캐릭터를 바로 입혀 본다
+document.addEventListener('change', (event) => {
+  const input = (event.target as HTMLElement).closest<HTMLInputElement>('[data-sheet-upload]');
+  const file = input?.files?.[0];
+  if (!file) return;
+  void uploadSheet(file).then((result) => {
+    sheetStatus = uploadMessage(result);
+    if (result.ok && customizing) tryOn({ ...customizing.draft, character: `${SHEET_CHARACTER_PREFIX}${result.character.id}` });
+    refreshPanels();
+  });
+});
+
+function uploadMessage(result: UploadResult): string {
+  if (result.ok) return t('look.sheetOk', { name: result.character.name });
+  if (result.error === 'missing-cells') return t('look.sheetMissing', { cells: result.missing.join(', ') });
+  if (result.error === 'wrong-size') return t('look.sheetWrongSize');
+  if (result.error === 'not-image') return t('look.sheetNotImage');
+  return t('look.sheetServer');
 }
 
 // 꾸미기: 고르는 즉시 지도 위 캐릭터에 입혀 본다
 document.addEventListener('change', (event) => {
+  if ((event.target as HTMLElement).hasAttribute('data-sheet-upload')) return; // 시트 올리기는 위에서 따로 처리한다
   const form = (event.target as HTMLElement).closest<HTMLFormElement>('[data-look-form]');
   const actor = form && customizing ? director.actors.get(customizing.id) : undefined;
   if (!form || !customizing || !actor) return;
@@ -241,6 +286,7 @@ document.addEventListener('submit', (event) => {
     const agent = agents.get(customizing.id);
     if (agent) saveLook(agent, customizing.draft);
     customizing = null;
+    sheetStatus = null;
     refreshPanels();
     return;
   }

@@ -5,8 +5,11 @@ import { previewOf } from '../office/portrait.ts';
 import type { AgentView } from './agentView.ts';
 import { escapeHtml, setHtml } from './dom.ts';
 import { lt, t } from '../i18n.ts';
+import { sheetPickerHtml } from '../characters/sheetPicker.ts';
+import { sheetIdOf } from '../../../shared/characterSheet.ts';
 
-export function renderLookEditor(el: HTMLElement, view: AgentView, draft: DollLook): void {
+/** sheetStatus: 캐릭터 시트를 올린 결과 한 줄 (없으면 null) */
+export function renderLookEditor(el: HTMLElement, view: AgentView, draft: DollLook, sheetStatus: string | null): void {
   const choice = (name: keyof DollLook, value: string, label: string, swatch?: string) =>
     `<label class="choice${swatch ? ' swatch' : ''}" title="${escapeHtml(label)}">
       <input type="radio" name="${name}" value="${value}"${(draft[name] ?? 'none') === value ? ' checked' : ''}>
@@ -15,11 +18,9 @@ export function renderLookEditor(el: HTMLElement, view: AgentView, draft: DollLo
   const group = (legend: string, items: string) => `<fieldset><legend>${legend}</legend><div class="choices">${items}</div></fieldset>`;
   const colors = (name: keyof DollLook, list: string[], label: string) => list.map((c, i) => choice(name, c, `${label} ${i + 1}`, c)).join('');
 
-  setHtml(el, `<div class="who"><b>${t('look.title')}</b><span>${escapeHtml(view.name)}</span></div>
-    <form class="look-form" data-look-form="${view.agent.id}">
-      <div class="look-preview"><img src="${previewOf(draft)}" alt="${t('look.preview')}" width="64" height="88"></div>
-      <div class="look-fields">
-        <fieldset><legend>${t('look.preset')}</legend><div class="choices">${PRESETS.map((p) => `<button class="btn sm" type="button" data-look-preset="${p.id}">${escapeHtml(lt(p.label))}</button>`).join('')}</div></fieldset>
+  // 올린 시트 캐릭터는 그림 그대로 그려서, 머리 · 옷 · 색 · 소품을 골라도 바뀌지 않는다. 그때는 숨긴다
+  const usesSheet = sheetIdOf(draft.character) !== null;
+  const partChoices = `
         ${group(t('look.hairStyle'), HAIR_STYLES.map((h) => choice('hairStyle', h.value, lt(h.label))).join(''))}
         ${group(t('look.hair'), colors('hair', HAIR_COLORS, t('look.hair')))}
         ${group(t('look.eyes'), EYE_STYLES.map((e) => choice('eyeStyle', e.value, lt(e.label))).join('') + colors('eyes', EYE_COLORS, t('look.eyes')))}
@@ -27,7 +28,15 @@ export function renderLookEditor(el: HTMLElement, view: AgentView, draft: DollLo
         ${group(t('look.outfit'), OUTFITS.map((o) => choice('outfit', o.value, lt(o.label))).join('') + colors('shirt', SHIRT_COLORS, t('look.outfit')))}
         ${group(t('look.pants'), colors('pants', PANTS_COLORS, t('look.pants')))}
         ${group(t('look.accessory'), ACCESSORIES.map((a) => choice('accessory', a.value, lt(a.label))).join(''))}
-        ${group(t('look.mark'), FACE_MARKS.map((m) => choice('mark', m.value, lt(m.label))).join(''))}
+        ${group(t('look.mark'), FACE_MARKS.map((m) => choice('mark', m.value, lt(m.label))).join(''))}`;
+
+  setHtml(el, `<div class="who"><b>${t('look.title')}</b><span>${escapeHtml(view.name)}</span></div>
+    <form class="look-form" data-look-form="${view.agent.id}">
+      <div class="look-preview"><img src="${previewOf(draft)}" alt="${t('look.preview')}" width="64" height="88"></div>
+      <div class="look-fields">
+        ${sheetPickerHtml(draft, sheetStatus)}
+        <fieldset><legend>${t('look.preset')}</legend><div class="choices">${PRESETS.map((p) => `<button class="btn sm" type="button" data-look-preset="${p.id}">${escapeHtml(lt(p.label))}</button>`).join('')}</div></fieldset>
+        ${usesSheet ? `<p class="sheet-hint">${t('look.sheetChosen')}</p>` : partChoices}
       </div>
       <div class="acts">
         <button class="btn sm primary" type="submit">${t('btn.save')}</button>
