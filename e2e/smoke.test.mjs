@@ -145,6 +145,38 @@ test('캐릭터 시트: 템플릿을 내려받고, 그린 시트를 올리면 �
   await page.click('form[data-look-form] button[type="submit"]');
 });
 
+test('허용 · 거부: 앱에서 누른 대답이 훅으로 돌아가고, 다른 사이트의 요청은 막는다', async () => {
+  if (await page.locator('dialog[open]').count()) await page.keyboard.press('Escape');
+  const ask = (command) => fetch(`${url}/api/permission/claude`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: 'perm', cwd: '/work/perm', hook_event_name: 'PermissionRequest', tool_name: 'Bash', tool_input: { command } })
+  }).then((r) => r.text());
+
+  // 꺼져 있으면 기다리지 않고 빈 대답 (터미널에서 묻는다)
+  assert.equal(await ask('ls'), '');
+
+  await page.click('#settings summary');
+  await page.check('#approvalsEnabled');
+  await page.waitForFunction(async (u) => (await (await fetch(`${u}/api/settings`)).json()).approvals, url);
+  await page.click('#settings summary');
+
+  const allowed = ask('npm test');
+  await page.click('[data-select="perm"]');
+  await page.waitForSelector('.approval code:has-text("npm test")');
+  await page.click('[data-approve]');
+  assert.equal(JSON.parse(await allowed).hookSpecificOutput.decision.behavior, 'allow');
+
+  const denied = ask('rm -rf build');
+  await page.waitForSelector('.approval code:has-text("rm -rf build")'); // 앞 질문의 단추가 아니라 새 질문의 단추를 누르도록
+  await page.click('[data-deny]');
+  assert.equal(JSON.parse(await denied).hookSpecificOutput.decision.behavior, 'deny');
+
+  // 다른 사이트에서 보낸 대답 · 설정 바꾸기는 막는다
+  const evil = { 'Content-Type': 'application/json', Origin: 'https://evil.example' };
+  assert.equal((await fetch(`${url}/api/permission/decide`, { method: 'POST', headers: evil, body: '{"id":"x","decision":"allow"}' })).status, 403);
+  assert.equal((await fetch(`${url}/api/settings`, { method: 'POST', headers: evil, body: '{"approvals":false}' })).status, 403);
+});
+
 test('지금까지 브라우저 오류가 없다', () => {
   assert.deepEqual(pageErrors, []);
 });

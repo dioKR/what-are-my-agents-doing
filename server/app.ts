@@ -13,6 +13,8 @@ import { readContextUsedRatio } from './transcript.ts';
 import { buy, earn, equip, rewardsFor, WalletStore, type ShopResult } from './wallet.ts';
 import { staticFilePath } from './staticPath.ts';
 import { CharacterStore, cleanCharacterName, isCharacterId, sheetProblem } from './characters.ts';
+import { afterDecision, ApprovalDesk, isTrustedPageRequest, permissionHookOutput, SettingsStore } from './approvals.ts';
+import { APPROVAL_WAIT_MS, type ApprovalDecision } from '../shared/approvals.ts';
 import type { RewardReason, ShopSlot } from '../shared/shop.ts';
 import { profileKey } from '../shared/profile.ts';
 import { countToolCall, countTurn, isBusy, noteBusyCount, noteLifetime, RecordsStore, TurnTracker, whoOf } from './records.ts';
@@ -27,6 +29,8 @@ let webRoot = '';
 const wallet = new WalletStore();
 const records = new RecordsStore();
 const characters = new CharacterStore();
+const settings = new SettingsStore();
+const approvals = new ApprovalDesk();
 const turns = new TurnTracker();
 /** 서버를 켠 시각. 이보다 앞선 기록(켤 때 몰아 읽는 지난 대화)으로는 코인을 주지 않고 작업 기록도 세지 않는다 (켤 때마다 두 번 세지 않게) */
 let startedAt = Date.now();
@@ -167,6 +171,47 @@ async function deleteCharacter(id: string, res: ServerResponse): Promise<void> {
   res.writeHead(204).end();
 }
 
+/**
+ * PermissionRequest 훅: 상태를 반영하고, 앱에서 허용 · 거부하기가 켜져 있으면 앱의 대답을 잠깐 기다린다.
+ * 대답하면 Claude Code가 읽는 JSON을, 시간이 지나면 빈 대답을 돌려준다 (그러면 평소처럼 터미널에서 묻는다).
+ */
+async function askPermission(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  const body = await readJsonBody(req);
+  if (!isClaudeHookPayload(body)) { res.writeHead(400).end(); return; }
+  applyEvents([body], 'hook');
+  const route = routeEvent(body);
+  const agent = route && agents.get(route.key);
+  if (!settings.state.approvals || !agent) { res.writeHead(200).end(); return; }
+
+  const now = Date.now();
+  const pending = approvals.ask({ agentId: agent.id, toolName: body.tool_name ?? '', detail: agent.detail, askedAt: now }, APPROVAL_WAIT_MS,
+    () => broadcast({ type: 'approvals', asks: approvals.list() }));
+  // Claude Code가 훅을 멈추면(터미널에서 취소 등) 기다리지 않는다
+  res.on('close', pending.cancel);
+  const decision = await pending.decision;
+  if (!decision) { res.writeHead(200).end(); return; }
+  const current = agents.get(agent.id);
+  if (current) upsert(afterDecision(current, decision));
+  res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(permissionHookOutput(decision)));
+}
+
+/** 앱에서 누른 허용 · 거부. 이 컴퓨터의 우리 화면에서 온 요청만 받는다 */
+async function decidePermission(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!isTrustedPageRequest(req)) { res.writeHead(403).end(); return; }
+  const body = (await readJsonBody(req)) as { id?: unknown; decision?: unknown };
+  const decision = body.decision === 'allow' || body.decision === 'deny' ? (body.decision as ApprovalDecision) : null;
+  const ok = typeof body.id === 'string' && decision !== null && approvals.decide(body.id, decision);
+  res.writeHead(ok ? 204 : 404).end();
+}
+
+async function updateSettings(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!isTrustedPageRequest(req)) { res.writeHead(403).end(); return; }
+  const body = (await readJsonBody(req)) as { approvals?: unknown };
+  if (typeof body.approvals === 'boolean') settings.set({ ...settings.state, approvals: body.approvals });
+  broadcast({ type: 'settings', settings: settings.state });
+  res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(settings.state));
+}
+
 /** 상점 요청(사기·입히기)을 처리하고 결과를 돌려준다 */
 function applyShopResult(result: ShopResult, res: ServerResponse): void {
   if (!result.ok) {
@@ -200,6 +245,8 @@ function openStream(req: IncomingMessage, res: ServerResponse): void {
   res.write(`data: ${JSON.stringify({ type: 'wallet', wallet: wallet.state } satisfies ServerMessage)}\n\n`);
   res.write(`data: ${JSON.stringify({ type: 'records', records: records.state } satisfies ServerMessage)}\n\n`);
   res.write(`data: ${JSON.stringify({ type: 'characters', characters: characters.list } satisfies ServerMessage)}\n\n`);
+  res.write(`data: ${JSON.stringify({ type: 'settings', settings: settings.state } satisfies ServerMessage)}\n\n`);
+  res.write(`data: ${JSON.stringify({ type: 'approvals', asks: approvals.list() } satisfies ServerMessage)}\n\n`);
   listeners.add(res);
   req.on('close', () => listeners.delete(res));
 }
@@ -230,6 +277,14 @@ const handleRequest = async (req: IncomingMessage, res: ServerResponse): Promise
     if (req.method === 'POST' && url.pathname === '/api/events/claude') {
       handleHookEvent(await readJsonBody(req));
       res.writeHead(204).end();
+    } else if (req.method === 'POST' && url.pathname === '/api/permission/claude') {
+      await askPermission(req, res);
+    } else if (req.method === 'POST' && url.pathname === '/api/permission/decide') {
+      await decidePermission(req, res);
+    } else if (req.method === 'GET' && url.pathname === '/api/settings') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(settings.state));
+    } else if (req.method === 'POST' && url.pathname === '/api/settings') {
+      await updateSettings(req, res);
     } else if (req.method === 'GET' && url.pathname === '/api/stream') {
       openStream(req, res);
     } else if (req.method === 'POST' && url.pathname === '/api/shop/buy') {
@@ -286,6 +341,7 @@ export async function startServer(options: StartOptions): Promise<RunningServer>
   await wallet.load();
   await records.load();
   await characters.load();
+  await settings.load();
   const server = createServer((req, res) => void handleRequest(req, res));
   return new Promise<RunningServer>((resolve, reject) => {
     server.once('error', reject);

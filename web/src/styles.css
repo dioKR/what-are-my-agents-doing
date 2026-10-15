@@ -53,6 +53,12 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .settings summary:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .settings-panel { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; gap: 6px; padding: 12px; min-width: 230px; background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 rgba(0, 0, 0, .35); }
 .settings-panel .settings-label { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.settings-check { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+.settings-hint { margin: 0; max-width: 240px; font-size: 11px; line-height: 1.5; color: var(--muted); }
+/* 내 차례 박스의 허용 · 거부 */
+.approval { display: grid; gap: 6px; margin-top: 8px; }
+.approval code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 6px; background: var(--panel-2); border: 1px solid var(--line); font-size: 12px; }
+.approval-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .settings-panel .timemode { width: fit-content; }
 
 .mapwrap { min-width: 0; }

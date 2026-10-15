@@ -95,6 +95,16 @@ Give Claude Code any task. Its character appears within a few seconds.
 
 - **Time of day** can be Now / Day / Evening / Night. "Now" follows your clock; at night the room lights, laptop screens and the street lamp turn on.
 - **Language** can be Korean or English. It starts from your browser language and remembers your choice.
+- **Allow / deny in the app** (off by default). See below.
+
+### Allow or deny permission prompts from the app
+
+Turn on "Answer permission prompts here" in the settings. When Claude Code asks for permission to run a tool, the agent's details panel shows what it wants to run with **Allow** and **Deny** buttons.
+
+- Claude Code waits up to **30 seconds** for your answer here. If you don't answer, it asks in the terminal as usual, so nothing gets stuck when the app is closed or you're not looking.
+- This uses Claude Code's `PermissionRequest` hook: the hook waits for the app's answer and hands it to Claude Code. Your deny rules in Claude Code still apply even if you press Allow.
+- The desktop app adds this hook automatically. If you use the `wamad` command, run `wamad hooks install` once again.
+- Only this computer's own page can answer: requests from other websites are refused.
 
 ![Night view](docs/images/night.png)
 
@@ -273,6 +283,7 @@ docs/index.html           homepage (GitHub Pages)
 
 - The server listens on **127.0.0.1 only**. Other machines on your network cannot reach it.
 - Transcripts are **read only**. They are never changed or deleted.
+- Allow / deny from the app is off by default. When on, only the page served by this server on this computer can answer (the server checks the Host and Origin headers and accepts JSON only).
 - Nothing is sent out. The only internet request is for the UI fonts (Google Fonts).
 - The desktop app asks GitHub once a day for the latest release number, to tell you when a new version is out. It sends nothing about you, and you can turn it off from the menu bar icon ("Check for new versions").
 - Sending results over Slack or email is done by the agents with their own tools. This tool only shows that it happened.
@@ -334,6 +345,7 @@ server/
   links.ts                finds PR URLs and local server URLs
   team.ts                 splits team events into lead and teammate states
   wallet.ts               coins earned from work, buying and equipping shop items (~/.wamad/wallet.json)
+  approvals.ts            allow / deny from the app: waits for your answer, checks the request comes from this page
   characters.ts           uploaded character sheets (~/.wamad/characters/)
   records.ts              records: tasks, busiest moment, longest-lived agent (~/.wamad/records.json)
 shared/shop.ts            shop items, prices and coin rules (shared by server and UI)

@@ -111,6 +111,9 @@ export function applyClaudeHook(prev: AgentSnapshot | undefined, payload: Claude
       return applyToolEnd(next, payload, true);
     case 'Notification':
       return applyNotification(next, payload.message ?? '');
+    case 'PermissionRequest':
+      // 권한을 묻는 순간 바로 온다 (Notification은 6초쯤 기다린 뒤에 온다)
+      return { ...next, activity: 'waiting-permission', detail: describeTool(payload.tool_name ?? '', payload.tool_input ?? {}, next.cwd), summary: PHRASES.waitingPermission };
     case 'Stop':
       return { ...withRecent(next, now, PHRASES.turnFinished), activity: 'waiting-user', detail: '', summary: PHRASES.waitingForInstruction };
     case 'SubagentStart':
