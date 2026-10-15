@@ -1,4 +1,6 @@
 // 상세 칸: 고른 에이전트가 지금 무엇을 하는지(상태 헤더), 내가 할 일이 있는지(내 차례 박스), 그 밖의 자세한 내용. 이름 바꾸기도 여기서 한다.
+import { approvalBoxHtml } from '../approvals/approvalBox.ts';
+import { askOf } from '../approvals/approvals.ts';
 import type { AgentLink, AgentSnapshot } from '../../../shared/protocol.ts';
 import { activityLabel, lt, statusLabel, t, todoLabel } from '../i18n.ts';
 import { MAX_NAME_LENGTH, TOOL_FULL_LABEL } from '../names.ts';
@@ -65,7 +67,7 @@ const TURN_ICON: Record<TurnKind, string> = { stuck: '!!', approve: '!', reply: 
 function turnLead(kind: TurnKind, agent: AgentSnapshot, linkCount: number): { title: string; hint: string | null } {
   switch (kind) {
     case 'stuck': return { title: t('turn.stuck', { n: agent.failStreak }), hint: t('turn.stuckHint') };
-    case 'approve': return { title: t('turn.approve'), hint: t('turn.approveHint') };
+    case 'approve': return { title: t('turn.approve'), hint: askOf(agent.id) ? t('turn.approveHintApp') : t('turn.approveHint') };
     case 'reply': return { title: t('turn.reply'), hint: t('turn.replyHint') };
     case 'links': return { title: t('turn.links', { n: linkCount }), hint: null };
     case 'none': return { title: t('turn.none'), hint: null };
@@ -102,7 +104,7 @@ function myTurn(agent: AgentSnapshot, now: number): string {
   const kind = turnKindOf(agent, links.length);
   const lead = turnLead(kind, agent, links.length);
   const leadHtml = `<div class="lead"><span class="ic" aria-hidden="true">${TURN_ICON[kind]}</span><b>${escapeHtml(lead.title)}</b>${lead.hint ? `<small>${escapeHtml(lead.hint)}</small>` : ''}</div>`;
-  return `<div class="my-turn k-${kind}">${leadHtml}${links.length ? turnLinks(links, kind !== 'links', now) : ''}</div>`;
+  return `<div class="my-turn k-${kind}">${leadHtml}${approvalBoxHtml(agent, now)}${links.length ? turnLinks(links, kind !== 'links', now) : ''}</div>`;
 }
 
 function turnLinks(links: AgentLink[], withHeading: boolean, now: number): string {

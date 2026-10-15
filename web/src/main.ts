@@ -27,6 +27,7 @@ import { renderShop } from './shop/shopPanel.ts';
 import { renderRecords, setRecords } from './records/recordsPanel.ts';
 import { deleteSheet, downloadSheetTemplate, syncCustomCharacters, uploadSheet, type UploadResult } from './characters/library.ts';
 import { SHEET_CHARACTER_PREFIX } from '../../shared/characterSheet.ts';
+import { decide, setApprovalAsks, setApprovalsEnabled, setAppSettings } from './approvals/approvals.ts';
 import { activeCoinPops, addCoinPop, buyItem, currentWallet, equipItem, equippedOf, setWallet } from './shop/wallet.ts';
 
 const MAP_PX_W = MAP_W * TILE;
@@ -87,6 +88,15 @@ function applyMessage(message: ServerMessage): void {
   if (message.type === 'wallet') {
     setWallet(message.wallet);
     agents.forEach((agent) => director.refreshLook(agent)); // 머리 장식을 바꿨으면 바로 입힌다
+    return;
+  }
+  if (message.type === 'settings') {
+    setAppSettings(message.settings);
+    byId<HTMLInputElement>('approvalsEnabled').checked = message.settings.approvals;
+    return;
+  }
+  if (message.type === 'approvals') {
+    setApprovalAsks(message.asks);
     return;
   }
   if (message.type === 'characters') {
@@ -237,6 +247,18 @@ function stopCustomizing(): void {
   customizing = null;
   sheetStatus = null;
 }
+
+// 앱에서 허용 · 거부 (결과는 서버가 실시간 연결로 다시 알려 준다)
+document.addEventListener('click', (event) => {
+  const target = (event.target as HTMLElement).closest<HTMLElement>('[data-approve],[data-deny],[data-approvals-enable]');
+  if (!target) return;
+  if (target.dataset.approve) void decide(target.dataset.approve, 'allow');
+  if (target.dataset.deny) void decide(target.dataset.deny, 'deny');
+  if (target.hasAttribute('data-approvals-enable')) void setApprovalsEnabled(true);
+});
+byId<HTMLInputElement>('approvalsEnabled').addEventListener('change', (event) => {
+  void setApprovalsEnabled((event.target as HTMLInputElement).checked);
+});
 
 // 캐릭터 시트: 올린 캐릭터 입혀 보기 · 지우기 · 템플릿 내려받기
 document.addEventListener('click', (event) => {
