@@ -66,7 +66,7 @@ Give Claude Code any task. Its character appears within a few seconds.
 
 ## What you see on the map
 
-**Zoom and move:** pinch on a trackpad or Ctrl (⌘) + mouse wheel to zoom, drag to move around, or use the + / − / ⤢ (whole map) buttons at the bottom right.
+**Zoom and move:** pinch on a trackpad or Ctrl (⌘) + mouse wheel to zoom, drag to move around, or use the zoom in / zoom out / whole map buttons at the bottom right.
 
 | What the agent is doing | Where the character goes |
 |---|---|
