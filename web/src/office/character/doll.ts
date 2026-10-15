@@ -21,8 +21,8 @@ const OUTLINE = '#221a26';
 export type Facing = 'down' | 'up' | 'left' | 'right';
 /** walk1·walk2는 한쪽 발을 든 장면. 두 발이 모이는 장면은 stand를 쓰고 몸을 1px 띄운다(그리는 쪽에서). */
 export type Pose = 'stand' | 'walk1' | 'walk2' | 'sit' | 'type1' | 'type2' | 'think' | 'raise' | 'drink' | 'stretch' | 'carry'
-  /** 해파리 춤: 두 팔을 옆으로 펴고 손끝을 위(jelly1) · 아래(jelly2)로 물결치듯 */
-  | 'jelly1' | 'jelly2';
+  /** 해파리 춤: 두 팔을 옆으로 펴고 물결친다. jelly1 왼팔 위 · 오른팔 아래 → jelly2 수평 → jelly3 왼팔 아래 · 오른팔 위 (화면 기준) */
+  | 'jelly1' | 'jelly2' | 'jelly3';
 export type Expression = 'normal' | 'blink' | 'focus' | 'happy' | 'panic' | 'sleepy';
 export type HairStyle = 'princess' | 'fluffy' | 'short' | 'spiky' | 'bob' | 'long' | 'ponytail' | 'buns' | 'shaggy' | 'dyedBob';
 export type Outfit = 'blouseSkirt' | 'shirtTie' | 'tee' | 'hoodie' | 'staffTee';
@@ -221,7 +221,7 @@ function arms(s: PixelSheet, view: View, pose: Pose, c: Colors, outfit: Outfit):
       }
       case 'think': s.rect(9, y(18), 2, 2, sleeve); s.rect(7, y(16), 2, 3, fore); s.rect(6, y(15), 2, 1, c.skin); return;
       case 'drink': s.rect(9, y(18), 2, 2, sleeve); s.rect(7, y(16), 2, 3, fore); s.rect(6, y(16), 1, 2, c.skin); return;
-      case 'raise': case 'stretch': case 'carry': case 'jelly1': case 'jelly2': arm(10, 4, 13, 2); return;
+      case 'raise': case 'stretch': case 'carry': case 'jelly1': case 'jelly2': case 'jelly3': arm(10, 4, 13, 2); return;
       default: arm(11, 18, 5, 23);
     }
     return;
@@ -243,11 +243,12 @@ function arms(s: PixelSheet, view: View, pose: Pose, c: Colors, outfit: Outfit):
     case 'raise': left(18, 4, 22); arm(19, 3, 14, 1); return;
     case 'stretch': arm(2, 3, 14, 1); arm(20, 3, 14, 1); return;
     case 'carry': arm(3, 2, 15, 0); arm(19, 2, 15, 0); return;
-    case 'jelly1': case 'jelly2': {
-      // 두 팔을 옆으로 쭉 펴고, 손끝을 위(jelly1)나 아래(jelly2)로
-      const handY = pose === 'jelly1' ? 16 : 20;
+    case 'jelly1': case 'jelly2': case 'jelly3': {
+      // 두 팔을 옆으로 쭉 펴고, 한쪽 손끝이 올라가면 다른 쪽은 내려간다
+      const UP = 16, LEVEL = 18, DOWN = 20;
+      const [leftHand, rightHand] = pose === 'jelly1' ? [UP, DOWN] : pose === 'jelly3' ? [DOWN, UP] : [LEVEL, LEVEL];
       s.rect(1, y(18), 4, 2, fore); s.rect(19, y(18), 4, 2, fore);
-      s.rect(0, y(handY), 1, 2, c.skin); s.rect(23, y(handY), 1, 2, c.skin);
+      s.rect(0, y(leftHand), 1, 2, c.skin); s.rect(23, y(rightHand), 1, 2, c.skin);
       return;
     }
     default: left(18, 4, 22); right(18, 4, 22);

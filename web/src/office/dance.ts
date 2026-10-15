@@ -20,9 +20,12 @@ const DISCO: Dance = {
   turnsPerSecond: 2
 };
 
-/** 해파리: 두 팔을 옆으로 펴고 손끝을 위아래로 물결치며 둥실둥실 떠오른다. 팔이 잘 보이게 앞만 본다 */
+/**
+ * 해파리: 두 팔을 옆으로 펴고, 왼팔이 올라가면 오른팔이 내려가는 물결을 탄다
+ * (왼팔 위 → 수평 → 오른팔 위 → 수평). 몸도 함께 둥실 떠올랐다 내려온다. 팔이 잘 보이게 앞만 본다
+ */
 const JELLYFISH: Dance = {
-  moves: [{ pose: 'jelly1', lift: 0 }, { pose: 'jelly1', lift: 1 }, { pose: 'jelly2', lift: 2 }, { pose: 'jelly2', lift: 1 }],
+  moves: [{ pose: 'jelly1', lift: 0 }, { pose: 'jelly2', lift: 1 }, { pose: 'jelly3', lift: 2 }, { pose: 'jelly2', lift: 1 }],
   beatsPerSecond: 3,
   facings: ['down'],
   turnsPerSecond: 0
