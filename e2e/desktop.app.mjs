@@ -37,14 +37,15 @@ after(async () => {
 
 test('앱 창에 오류 화면이 아니라 사무실 지도가 그려진다', async () => {
   await window.waitForSelector('#map', { timeout: 20_000 });
-  await window.waitForTimeout(500);
-  const painted = await window.evaluate(() => {
+  // 창이 뒤에 있으면 그리기가 멈출 수 있어 앞으로 가져온 뒤, 지도가 칠해질 때까지 기다린다
+  await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0]?.focus());
+  const painted = await window.waitForFunction(() => {
     const canvas = document.getElementById('map');
     const data = canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data;
     let colored = 0;
     for (let i = 3; i < data.length; i += 4 * 97) if (data[i] > 0) colored++;
-    return colored;
-  });
+    return colored > 100 ? colored : false;
+  }, null, { timeout: 20_000 }).then((h) => h.jsonValue(), () => 0);
   assert.ok(painted > 100, `칠해진 픽셀이 너무 적음: ${painted}`);
 });
 

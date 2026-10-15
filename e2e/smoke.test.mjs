@@ -177,6 +177,30 @@ test('허용 · 거부: 앱에서 누른 대답이 훅으로 돌아가고, 다�
   assert.equal((await fetch(`${url}/api/settings`, { method: 'POST', headers: evil, body: '{"approvals":false}' })).status, 403);
 });
 
+test('오른쪽 클릭 메뉴: 카드에서 열어 이름 바꾸기를 열고, 다른 에이전트는 사무실에서 내보낸다', async () => {
+  if (await page.locator('dialog[open]').count()) await page.keyboard.press('Escape');
+  await hook('menu1', { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: 'ls' } });
+  await hook('menu2', { hook_event_name: 'PreToolUse', tool_name: 'Bash', tool_input: { command: 'ls' } });
+  await page.waitForSelector('.agentcard[data-select="menu2"]');
+
+  await page.click('.agentcard[data-select="menu1"]', { button: 'right' });
+  await page.waitForSelector('#agentMenu:not([hidden]) [data-rename="menu1"]');
+  assert.equal(await page.evaluate(() => document.activeElement?.getAttribute('role')), 'menuitem'); // 첫 항목에 초점
+  await page.click('#agentMenu [data-rename="menu1"]');
+  await page.waitForSelector('#renameInput');
+  assert.equal(await page.isHidden('#agentMenu'), true);
+  await page.click('[data-rename-cancel]');
+
+  await page.click('.agentcard[data-select="menu2"]', { button: 'right' });
+  await page.click('#agentMenu [data-dismiss="menu2"]');
+  await page.waitForSelector('.agentcard[data-select="menu2"]', { state: 'detached' });
+  assert.ok(!(await (await fetch(`${url}/api/agents`)).json()).some((a) => a.id === 'menu2'));
+
+  const evil = { 'Content-Type': 'application/json', Origin: 'https://evil.example' };
+  assert.equal((await fetch(`${url}/api/agents/dismiss`, { method: 'POST', headers: evil, body: '{"id":"menu1"}' })).status, 403);
+  assert.equal((await fetch(`${url}/api/agents/open-folder`, { method: 'POST', headers: evil, body: '{"id":"menu1"}' })).status, 403);
+});
+
 test('지금까지 브라우저 오류가 없다', () => {
   assert.deepEqual(pageErrors, []);
 });

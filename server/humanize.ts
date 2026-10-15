@@ -9,13 +9,13 @@ const both = (ko: string, en: string): LocalText => ({ ko, en });
 /** 자주 쓰는 고정 문장 */
 export const PHRASES = {
   waitingForInstruction: both('다음 지시를 기다리는 중', 'Waiting for the next instruction'),
-  thinkingAfterCompact: both('요약을 마치고 이어서 생각하는 중', 'Back from compacting, thinking'),
+  thinkingAfterCompact: both('컨텍스트 정리를 마치고 이어서 생각하는 중', 'Back from compacting, thinking'),
   readingRequest: both('요청을 읽고 생각하는 중', 'Reading the request'),
-  compacting: both('대화를 요약하는 중', 'Compacting the conversation'),
+  compacting: both('컨텍스트를 정리하는 중 (compact)', 'Compacting context'),
   sessionEnded: both('세션을 마침', 'Session ended'),
   waitingPermission: both('실행해도 되는지 승인을 기다리는 중', 'Waiting for your approval'),
   turnFinished: both('한 턴을 마침', 'Finished a turn'),
-  compactedLog: both('컨텍스트가 차서 대화를 요약함', 'Context filled up, compacted'),
+  compactedLog: both('컨텍스트가 차서 정리함 (compact)', 'Context filled up, compacted'),
   newRequest: both('새 요청 받음', 'Got a new request'),
   joinedTeam: both('회의실에 들어와 자리에 앉음', 'Joined the meeting room'),
   teammateIdle: both('맡은 일을 마치고 기다리는 중', 'Done for now, waiting')

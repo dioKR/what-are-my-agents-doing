@@ -39,7 +39,7 @@ export const ROOMS = [
   { name: { ko: '개발실\n파일·명령 작업', en: 'Dev room\nFiles & commands' }, x: 12.5, y: 15.4 },
   { name: { ko: '자료실\n웹 검색', en: 'Library\nWeb search' }, x: 25.5, y: 15.4 },
   { name: { ko: '서버실\n백그라운드 실행', en: 'Server room\nBackground jobs' }, x: 33, y: 15.4 },
-  { name: { ko: '수면실\n대화 요약', en: 'Nap room\nCompacting' }, x: 11.5, y: 24.4 },
+  { name: { ko: '수면실\n컨텍스트 정리', en: 'Nap room\nCompacting context' }, x: 11.5, y: 24.4 },
   { name: { ko: '탕비실\n지시 기다림', en: 'Pantry\nWaiting for you' }, x: 23.5, y: 24.4 },
   { name: { ko: '로비\nSlack·메일', en: 'Lobby\nSlack & mail' }, x: 32, y: 24.4 },
   { name: { ko: '회의실\n팀 회의', en: 'Meeting room\nTeam meeting' }, x: 41.5, y: 26.2 }, // 아래 줄 팀원 이름표와 겹치지 않게 아래 벽에 건다

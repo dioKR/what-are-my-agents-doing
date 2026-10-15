@@ -66,6 +66,8 @@ const KO = {
   'inspector.subagents': '하위 에이전트: {list}', 'inspector.sent': '보냄', 'inspector.read': '읽음',
   'btn.rename': '이름 바꾸기', 'btn.customize': '꾸미기', 'btn.save': '저장', 'btn.cancel': '취소', 'btn.resetLook': '기본 모습으로',
   'rename.title': '이름 바꾸기', 'rename.label': '새 이름', 'rename.hint': '같은 폴더에서 다시 실행해도 이 이름으로 나옵니다. 비워 두고 저장하면 기본 이름으로 돌아갑니다.',
+  'menu.allow': '허용', 'menu.deny': '거부', 'menu.openFolder': '작업 폴더 열기', 'menu.openLink': '최근 링크 열기',
+  'menu.dismiss': '사무실에서 내보내기', 'menu.dismissHint': '화면에서만 뺍니다. Claude Code는 그대로 돌고, 다시 일하면 돌아옵니다.',
   'approval.allow': '허용', 'approval.deny': '거부', 'approval.countdown': '{n}초 뒤 터미널로 넘어감',
   'approval.enable': '앱에서 바로 허용 · 거부하기 켜기', 'approval.terminalOnly': '터미널에서 허용하거나 거부해 주세요.',
   'settings.approvals': '앱에서 허용 · 거부', 'settings.approvalsOn': '권한 질문을 앱에서 받기',
@@ -132,6 +134,8 @@ const EN: Record<Key, string> = {
   'inspector.subagents': 'Subagents: {list}', 'inspector.sent': 'Sent', 'inspector.read': 'Read',
   'btn.rename': 'Rename', 'btn.customize': 'Customize', 'btn.save': 'Save', 'btn.cancel': 'Cancel', 'btn.resetLook': 'Reset look',
   'rename.title': 'Rename', 'rename.label': 'New name', 'rename.hint': 'The name sticks for this folder. Save it empty to go back to the default.',
+  'menu.allow': 'Allow', 'menu.deny': 'Deny', 'menu.openFolder': 'Open work folder', 'menu.openLink': 'Open latest link',
+  'menu.dismiss': 'Send out of the office', 'menu.dismissHint': 'Only hides it here. Claude Code keeps running, and the agent comes back when it works again.',
   'approval.allow': 'Allow', 'approval.deny': 'Deny', 'approval.countdown': 'goes to the terminal in {n}s',
   'approval.enable': 'Turn on allow / deny from the app', 'approval.terminalOnly': 'Allow or deny it in the terminal.',
   'settings.approvals': 'Allow / deny in the app', 'settings.approvalsOn': 'Answer permission prompts here',
@@ -172,12 +176,12 @@ export function t(key: Key, params: Record<string, string | number> = {}): strin
 export const ACTIVITY_LABEL: Record<Lang, Record<Activity, string>> = {
   ko: {
     working: '작업 중', thinking: '생각 중', 'waiting-permission': '승인 기다림', 'waiting-user': '지시 기다림',
-    compacting: '수면실에서 요약 중', researching: '자료실에서 찾는 중', background: '서버실에서 실행 중',
+    compacting: '수면실에서 컨텍스트 정리 중', researching: '자료실에서 찾는 중', background: '서버실에서 실행 중',
     'mail-send': '우편 보내는 중', 'mail-read': '우편 읽는 중', stuck: '같은 실패 반복 중', ended: '퇴근'
   },
   en: {
     working: 'Working', thinking: 'Thinking', 'waiting-permission': 'Needs approval', 'waiting-user': 'Waiting for you',
-    compacting: 'Compacting in the nap room', researching: 'Researching in the library', background: 'Running in the server room',
+    compacting: 'Compacting context in the nap room', researching: 'Researching in the library', background: 'Running in the server room',
     'mail-send': 'Sending mail', 'mail-read': 'Reading mail', stuck: 'Stuck in a failure loop', ended: 'Left for the day'
   }
 };
