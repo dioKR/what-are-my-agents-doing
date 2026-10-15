@@ -12,6 +12,7 @@ import { routeEvent } from './team.ts';
 import { readContextUsedRatio } from './transcript.ts';
 import { buy, earn, equip, rewardsFor, WalletStore, type ShopResult } from './wallet.ts';
 import { staticFilePath } from './staticPath.ts';
+import { CharacterStore, cleanCharacterName, isCharacterId, sheetProblem } from './characters.ts';
 import type { RewardReason, ShopSlot } from '../shared/shop.ts';
 import { profileKey } from '../shared/profile.ts';
 import { countToolCall, countTurn, isBusy, noteBusyCount, noteLifetime, RecordsStore, TurnTracker, whoOf } from './records.ts';
@@ -25,6 +26,7 @@ const CONTEXT_REFRESH_MS = 2_000;
 let webRoot = '';
 const wallet = new WalletStore();
 const records = new RecordsStore();
+const characters = new CharacterStore();
 const turns = new TurnTracker();
 /** 서버를 켠 시각. 이보다 앞선 기록(켤 때 몰아 읽는 지난 대화)으로는 코인을 주지 않고 작업 기록도 세지 않는다 (켤 때마다 두 번 세지 않게) */
 let startedAt = Date.now();
@@ -135,6 +137,36 @@ function payCoins(agentId: string, reasons: RewardReason[], now: number): void {
   broadcast({ type: 'reward', agentId, amount: result.earned.reduce((sum, e) => sum + e.amount, 0) });
 }
 
+/**
+ * 캐릭터 시트 올리기: { name, png(base64) }. JSON으로만 받아서, 다른 사이트가 몰래 올리지 못하게 한다
+ * (다른 사이트에서 JSON을 보내려면 브라우저가 먼저 허락을 묻는데, 이 서버는 허락하지 않는다).
+ */
+async function uploadCharacter(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  if (!req.headers['content-type']?.startsWith('application/json')) { res.writeHead(415).end(); return; }
+  const body = (await readJsonBody(req)) as { name?: unknown; png?: unknown };
+  const png = Buffer.from(typeof body.png === 'string' ? body.png : '', 'base64');
+  const problem = sheetProblem(png);
+  if (problem) {
+    res.writeHead(400, { 'Content-Type': 'application/json' }).end(JSON.stringify({ error: problem }));
+    return;
+  }
+  const character = await characters.add(cleanCharacterName(body.name), png, Date.now());
+  broadcast({ type: 'characters', characters: characters.list });
+  res.writeHead(201, { 'Content-Type': 'application/json' }).end(JSON.stringify(character));
+}
+
+async function serveCharacterPng(id: string, res: ServerResponse): Promise<void> {
+  const png = await characters.readPng(id);
+  if (!png) { res.writeHead(404).end(); return; }
+  res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'no-cache' }).end(png);
+}
+
+async function deleteCharacter(id: string, res: ServerResponse): Promise<void> {
+  if (!isCharacterId(id) || !(await characters.remove(id))) { res.writeHead(404).end(); return; }
+  broadcast({ type: 'characters', characters: characters.list });
+  res.writeHead(204).end();
+}
+
 /** 상점 요청(사기·입히기)을 처리하고 결과를 돌려준다 */
 function applyShopResult(result: ShopResult, res: ServerResponse): void {
   if (!result.ok) {
@@ -167,6 +199,7 @@ function openStream(req: IncomingMessage, res: ServerResponse): void {
   res.write(`data: ${JSON.stringify({ type: 'snapshot', protocol: PROTOCOL_VERSION, agents: [...agents.values()] } satisfies ServerMessage)}\n\n`);
   res.write(`data: ${JSON.stringify({ type: 'wallet', wallet: wallet.state } satisfies ServerMessage)}\n\n`);
   res.write(`data: ${JSON.stringify({ type: 'records', records: records.state } satisfies ServerMessage)}\n\n`);
+  res.write(`data: ${JSON.stringify({ type: 'characters', characters: characters.list } satisfies ServerMessage)}\n\n`);
   listeners.add(res);
   req.on('close', () => listeners.delete(res));
 }
@@ -206,6 +239,14 @@ const handleRequest = async (req: IncomingMessage, res: ServerResponse): Promise
       const body = (await readJsonBody(req)) as { key?: string; slot?: ShopSlot; itemId?: string | null };
       if (!body.key || (body.slot !== 'head' && body.slot !== 'pet')) { res.writeHead(400).end(); return; }
       applyShopResult(equip(wallet.state, body.key, body.slot, body.itemId ?? null), res);
+    } else if (req.method === 'GET' && url.pathname === '/api/characters') {
+      res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(characters.list));
+    } else if (req.method === 'POST' && url.pathname === '/api/characters') {
+      await uploadCharacter(req, res);
+    } else if (req.method === 'GET' && url.pathname.startsWith('/api/characters/') && url.pathname.endsWith('.png')) {
+      await serveCharacterPng(url.pathname.slice('/api/characters/'.length, -'.png'.length), res);
+    } else if (req.method === 'DELETE' && url.pathname.startsWith('/api/characters/')) {
+      await deleteCharacter(url.pathname.slice('/api/characters/'.length), res);
     } else if (req.method === 'GET' && url.pathname === '/api/records') {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(records.state));
     } else if (req.method === 'GET' && url.pathname === '/api/wallet') {
@@ -244,6 +285,7 @@ export async function startServer(options: StartOptions): Promise<RunningServer>
   startedAt = Date.now();
   await wallet.load();
   await records.load();
+  await characters.load();
   const server = createServer((req, res) => void handleRequest(req, res));
   return new Promise<RunningServer>((resolve, reject) => {
     server.once('error', reject);
