@@ -97,6 +97,18 @@ Give Claude Code any task. Its character appears within a few seconds.
 - **Language** can be Korean or English. It starts from your browser language and remembers your choice.
 - **Allow / deny in the app** (off by default). See below.
 
+### Right-click menu
+
+Right-click a character on the map or a card at the top:
+
+- **Allow / Deny** (only while that agent is waiting for approval in the app)
+- **Rename**, **Customize**
+- **Open work folder** in Finder / File Explorer
+- **Open latest link** (the newest PR or local server it mentioned)
+- **Send out of the office**: hides it here only. Claude Code keeps running, and the agent comes back when it works again.
+
+The menu works with the keyboard too: focus a card, press the context menu key (or Shift+F10), then use ↑ ↓ and Enter.
+
 ### Allow or deny permission prompts from the app
 
 Turn on "Answer permission prompts here" in the settings. When Claude Code asks for permission to run a tool, the agent's details panel shows what it wants to run with **Allow** and **Deny** buttons.

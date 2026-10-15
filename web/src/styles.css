@@ -291,6 +291,15 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .shop-rules b, .shop-recent b { color: var(--amber); }
 .shop .muted { color: var(--muted); font-size: 12px; }
 
+/* ---------- 오른쪽 클릭 메뉴 ---------- */
+.agent-menu { position: fixed; z-index: 20; min-width: 190px; padding: 4px; background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 rgba(0, 0, 0, .45); display: flex; flex-direction: column; }
+.agent-menu[hidden] { display: none; }
+.agent-menu-title { margin: 2px 8px 4px; font: 12px var(--pixel); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+.agent-menu [role="menuitem"] { display: block; width: 100%; padding: 6px 10px; background: none; border: 0; color: var(--text); font: 13px var(--body); text-align: left; text-decoration: none; cursor: pointer; }
+.agent-menu [role="menuitem"]:hover, .agent-menu [role="menuitem"]:focus-visible { background: var(--panel-2); color: var(--amber); outline: none; }
+.agent-menu [role="menuitem"].primary { color: var(--amber); }
+.agent-menu hr { width: 100%; margin: 4px 0; border: 0; border-top: 1px solid var(--line); }
+
 /* ---------- 기록실 (트로피 버튼) ---------- */
 .icon-button { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 2px solid var(--line); background: var(--panel); color: var(--muted); cursor: pointer; }
 .icon-button:hover { color: var(--amber); border-color: var(--amber); }

@@ -15,6 +15,7 @@ import { staticFilePath } from './staticPath.ts';
 import { CharacterStore, cleanCharacterName, isCharacterId, sheetProblem } from './characters.ts';
 import { afterDecision, ApprovalDesk, isTrustedPageRequest, permissionHookOutput, SettingsStore } from './approvals.ts';
 import { APPROVAL_WAIT_MS, type ApprovalDecision } from '../shared/approvals.ts';
+import { openFolder } from './openFolder.ts';
 import type { RewardReason, ShopSlot } from '../shared/shop.ts';
 import { profileKey } from '../shared/profile.ts';
 import { countToolCall, countTurn, isBusy, noteBusyCount, noteLifetime, RecordsStore, TurnTracker, whoOf } from './records.ts';
@@ -204,6 +205,23 @@ async function decidePermission(req: IncomingMessage, res: ServerResponse): Prom
   res.writeHead(ok ? 204 : 404).end();
 }
 
+/**
+ * 오른쪽 클릭 메뉴: 작업 폴더 열기 · 사무실에서 내보내기. 이 컴퓨터의 우리 화면에서 온 요청만 받는다.
+ * 내보낸 에이전트는 다시 일하면(새 이벤트가 오면) 돌아온다.
+ */
+async function agentAction(req: IncomingMessage, res: ServerResponse, action: 'open-folder' | 'dismiss'): Promise<void> {
+  if (!isTrustedPageRequest(req)) { res.writeHead(403).end(); return; }
+  const body = (await readJsonBody(req)) as { id?: unknown };
+  const agent = typeof body.id === 'string' ? agents.get(body.id) : undefined;
+  if (!agent) { res.writeHead(404).end(); return; }
+  if (action === 'dismiss') {
+    remove(agent.id);
+    res.writeHead(204).end();
+    return;
+  }
+  res.writeHead((await openFolder(agent.projectDir ?? agent.cwd)) ? 204 : 404).end();
+}
+
 async function updateSettings(req: IncomingMessage, res: ServerResponse): Promise<void> {
   if (!isTrustedPageRequest(req)) { res.writeHead(403).end(); return; }
   const body = (await readJsonBody(req)) as { approvals?: unknown };
@@ -281,6 +299,10 @@ const handleRequest = async (req: IncomingMessage, res: ServerResponse): Promise
       await askPermission(req, res);
     } else if (req.method === 'POST' && url.pathname === '/api/permission/decide') {
       await decidePermission(req, res);
+    } else if (req.method === 'POST' && url.pathname === '/api/agents/open-folder') {
+      await agentAction(req, res, 'open-folder');
+    } else if (req.method === 'POST' && url.pathname === '/api/agents/dismiss') {
+      await agentAction(req, res, 'dismiss');
     } else if (req.method === 'GET' && url.pathname === '/api/settings') {
       res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(settings.state));
     } else if (req.method === 'POST' && url.pathname === '/api/settings') {

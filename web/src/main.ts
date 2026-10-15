@@ -27,7 +27,8 @@ import { renderShop } from './shop/shopPanel.ts';
 import { renderRecords, setRecords } from './records/recordsPanel.ts';
 import { deleteSheet, downloadSheetTemplate, syncCustomCharacters, uploadSheet, type UploadResult } from './characters/library.ts';
 import { SHEET_CHARACTER_PREFIX } from '../../shared/characterSheet.ts';
-import { decide, setApprovalAsks, setApprovalsEnabled, setAppSettings } from './approvals/approvals.ts';
+import { askOf, decide, setApprovalAsks, setApprovalsEnabled, setAppSettings } from './approvals/approvals.ts';
+import { closeAgentMenu, moveMenuFocus, openAgentMenu } from './panels/agentMenu.ts';
 import { activeCoinPops, addCoinPop, buyItem, currentWallet, equipItem, equippedOf, setWallet } from './shop/wallet.ts';
 
 const MAP_PX_W = MAP_W * TILE;
@@ -49,7 +50,7 @@ if (isDesktopApp) byId('hookStep').dataset.i18n = 'empty.step2.desktop';
 const els = {
   stage: byId('stage'), mapWrap: byId('mapwrap'), labels: byId('labels'), empty: byId('empty'),
   agentBar: byId('agentbar'), alerts: byId('alerts'), inspector: byId('inspector'), tabPanel: byId('tabpanel'),
-  connection: byId('connection'), coinCount: byId('coinCount'), shop: byId<HTMLDialogElement>('shop'), records: byId<HTMLDialogElement>('records')
+  connection: byId('connection'), coinCount: byId('coinCount'), shop: byId<HTMLDialogElement>('shop'), records: byId<HTMLDialogElement>('records'), agentMenu: byId('agentMenu')
 };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -142,6 +143,8 @@ function buildViews(): AgentView[] {
       return { agent, name: displayName(agent, agents.values()), look, portrait: look && portraitOf(look) };
     });
 }
+
+const viewOf = (id: string): AgentView | undefined => buildViews().find((v) => v.agent.id === id);
 
 function refreshPanels(): void {
   const views = buildViews();
@@ -321,7 +324,8 @@ document.addEventListener('submit', (event) => {
   refreshPanels();
 });
 
-canvas.addEventListener('click', (event) => {
+/** 지도에서 누른 곳에 있는 캐릭터 (가장 가까운 하나) */
+function actorIdAt(event: MouseEvent): string | null {
   const rect = canvas.getBoundingClientRect();
   const mx = ((event.clientX - rect.left) / rect.width) * VIEW_PX.w + VIEW_PX.x;
   const my = ((event.clientY - rect.top) / rect.height) * VIEW_PX.h + VIEW_PX.y;
@@ -332,8 +336,46 @@ canvas.addEventListener('click', (event) => {
     const distance = Math.hypot(mx - (box.x + DOLL_W / 2), my - (box.y + DOLL_H / 2));
     if (distance < HIT_RADIUS && (!best || distance < best.distance)) best = { id: actor.id, distance };
   }
-  if (best) { selectedId = best.id; renamingId = null; stopCustomizing(); refreshPanels(); }
+  return best?.id ?? null;
+}
+
+canvas.addEventListener('click', (event) => {
+  const id = actorIdAt(event);
+  if (id) { selectedId = id; renamingId = null; stopCustomizing(); refreshPanels(); }
 });
+
+// 오른쪽 클릭 메뉴: 지도 위 캐릭터와 위쪽 카드에서 연다
+document.addEventListener('contextmenu', (event) => {
+  const card = (event.target as HTMLElement).closest<HTMLElement>('.agentcard[data-select]');
+  const id = event.target === canvas ? actorIdAt(event) : card?.dataset.select ?? null;
+  const view = id ? viewOf(id) : undefined;
+  if (!view) { closeAgentMenu(els.agentMenu); return; }
+  event.preventDefault();
+  selectedId = view.agent.id;
+  refreshPanels();
+  openAgentMenu(els.agentMenu, view, askOf(view.agent.id), event.clientX, event.clientY);
+});
+
+// 메뉴 항목을 누르면 (항목 자체의 동작은 위의 공통 처리가 맡는다) 메뉴를 닫는다. 메뉴 밖을 눌러도 닫는다
+document.addEventListener('click', (event) => {
+  if (els.agentMenu.hidden) return;
+  const target = event.target as HTMLElement;
+  const dismiss = target.closest<HTMLElement>('[data-dismiss]')?.dataset.dismiss;
+  const folder = target.closest<HTMLElement>('[data-open-folder]')?.dataset.openFolder;
+  if (dismiss) void postAgentAction('dismiss', dismiss);
+  if (folder) void postAgentAction('open-folder', folder);
+  closeAgentMenu(els.agentMenu);
+});
+els.agentMenu.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); moveMenuFocus(els.agentMenu, event.key === 'ArrowDown' ? 1 : -1); }
+  if (event.key === 'Escape' || event.key === 'Tab') closeAgentMenu(els.agentMenu);
+});
+window.addEventListener('resize', () => closeAgentMenu(els.agentMenu));
+window.addEventListener('scroll', () => closeAgentMenu(els.agentMenu), true);
+
+async function postAgentAction(action: 'dismiss' | 'open-folder', id: string): Promise<void> {
+  await fetch(`/api/agents/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => null);
+}
 
 // ---------- 반복 ----------
 closeSettingsOnClickAwayOrEscape(byId<HTMLDetailsElement>('settings'));
