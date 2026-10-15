@@ -7,7 +7,7 @@ import type { HeadItem } from '../../../../shared/shop.ts';
 import { composeCharacter, SPRITE_FOOT_Y, SPRITE_H, SPRITE_W } from './sprites/compose.ts';
 import { CHARACTER_ART } from './sprites/index.ts';
 import { sheetFrame } from './sheets.ts';
-import { sheetIdOf } from '../../../../shared/characterSheet.ts';
+import { SHEET_POSES, sheetIdOf, type SheetPose } from '../../../../shared/characterSheet.ts';
 
 export const DOLL_W = SPRITE_W;
 export const DOLL_H = SPRITE_H;
@@ -77,11 +77,14 @@ export function dollFrame(look: DollLook, facing: Facing, pose: Pose, expression
   if (cached) return cached;
   const sheetId = sheetIdOf(look.character);
   const art = look.character ? CHARACTER_ART[look.character] : undefined;
-  const canvas = (sheetId ? sheetFrame(sheetId, facing, pose) : null)
+  const canvas = (sheetId ? sheetFrame(sheetId, facing, sheetPoseOf(pose)) : null)
     ?? (art ? composeCharacter(art, look, facing, pose, expression) : paintOnSpriteCanvas(look, facing, pose, expression));
   cache.set(key, canvas);
   return canvas;
 }
+
+/** 시트에 칸이 없는 자세(해파리 춤)는 손든 그림으로 대신한다 */
+const sheetPoseOf = (pose: Pose): SheetPose => ((SHEET_POSES as readonly string[]).includes(pose) ? pose as SheetPose : 'raise');
 
 /** 캐릭터 시트를 새로 불러오거나 지웠을 때, 그 전에 그려 둔 장면을 버린다 */
 export function clearDollFrames(): void {
