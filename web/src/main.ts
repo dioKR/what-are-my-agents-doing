@@ -29,6 +29,7 @@ import { deleteSheet, downloadSheetTemplate, syncCustomCharacters, uploadSheet, 
 import { SHEET_CHARACTER_PREFIX } from '../../shared/characterSheet.ts';
 import { askOf, decide, setApprovalAsks, setApprovalsEnabled, setAppSettings } from './approvals/approvals.ts';
 import { closeAgentMenu, moveMenuFocus, openAgentMenu } from './panels/agentMenu.ts';
+import { MapCamera } from './office/mapCamera.ts';
 import { activeCoinPops, addCoinPop, buyItem, currentWallet, equipItem, equippedOf, setWallet } from './shop/wallet.ts';
 
 const MAP_PX_W = MAP_W * TILE;
@@ -66,6 +67,8 @@ const pets = new PetKeeper();
 let shopTab: ShopSlot = 'head';
 const lightLayer = document.createElement('canvas');
 lightLayer.width = MAP_PX_W; lightLayer.height = MAP_PX_H;
+// 확대 · 이동하면 떠 있던 오른쪽 클릭 메뉴는 자리가 맞지 않으니 닫는다
+const mapCamera = new MapCamera(canvas, { w: VIEW_PX.w, h: VIEW_PX.h }, () => closeAgentMenu(els.agentMenu));
 const labels = new MapLabels(els.labels);
 const floor = paintFloor();
 let selectedId: string | null = null;
@@ -176,9 +179,18 @@ function fitToWidth(): void {
   canvas.style.width = `${VIEW_PX.w * scale}px`;
   canvas.style.height = `${VIEW_PX.h * scale}px`;
   els.stage.classList.toggle('small', scale < 1.2);
+  mapCamera.setFitScale(scale);
 }
 
 // ---------- 입력 ----------
+// 지도 확대 · 축소 · 맞추기 단추 (끌기 · 핀치는 MapCamera가 맡는다)
+document.addEventListener('click', (event) => {
+  const zoom = (event.target as HTMLElement).closest<HTMLElement>('[data-zoom]')?.dataset.zoom;
+  if (zoom === 'in') mapCamera.zoomIn();
+  if (zoom === 'out') mapCamera.zoomOut();
+  if (zoom === 'reset') mapCamera.reset();
+});
+
 // 기록실: 열기 · 닫기
 document.addEventListener('click', (event) => {
   if (event.target === els.records) { els.records.close(); return; } // 창 바깥(어두운 배경)을 누르면 닫는다
@@ -395,7 +407,8 @@ function frame(now: number): void {
   g.setTransform(1, 0, 0, 1, -VIEW_PX.x, -VIEW_PX.y);
   pets.update(dt, director.actors.values(), (id) => { const agent = agents.get(id); return agent && equippedOf(agent).pet; });
   renderOffice({ g, floor, lightLayer, director, agents, selectedId, time: clock, reduceMotion, ambient: ambientAt(timeMode, new Date()), pets: pets.pets.values() });
-  labels.update(director, agents, nameOf, scale, VIEW_PX, selectedId, activeCoinPops(clock));
+  const view = mapCamera.labelFrame();
+  labels.update(director, agents, nameOf, view.scale, { x: VIEW_PX.x + view.x, y: VIEW_PX.y + view.y }, selectedId, activeCoinPops(clock));
   sincePanels += dt;
   if (sincePanels >= PANEL_REFRESH_SECONDS) { sincePanels = 0; refreshPanels(); }
   requestAnimationFrame(frame);
