@@ -20,7 +20,7 @@ const SHORT_SLEEVE_FROM = 27;
 const STEP_OF: Partial<Record<Pose, StepPose>> = { walk1: 'step1', walk2: 'step2' };
 const ARM_OF: Record<Pose, ArmPose> = {
   stand: 'down', sit: 'down', walk1: 'swing1', walk2: 'swing2', type1: 'type1', type2: 'type2',
-  think: 'chin', drink: 'chin', raise: 'raise', stretch: 'up', carry: 'up'
+  think: 'chin', drink: 'chin', raise: 'raise', stretch: 'up', carry: 'up', jelly1: 'spreadUp', jelly2: 'spreadDown'
 };
 
 type Grid = string[][];

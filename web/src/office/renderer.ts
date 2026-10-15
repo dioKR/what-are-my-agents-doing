@@ -1,4 +1,5 @@
 // 한 프레임을 그린다: 바닥·벽 → 창문 → (가구·침대·캐릭터를 아래쪽에 있는 것부터) → 머리 위 아이콘 → 선택 표시 → 조명.
+import { danceMoveAt } from './dance.ts';
 import type { Activity, AgentSnapshot } from '../../../shared/protocol.ts';
 import { BEDS, LIGHTS, TILE, WINDOWS, furniture } from './map.ts';
 import { drawBed, drawFurniture, drawWindow, type BoardCard, type FurnitureContext } from './furnitureArt.ts';
@@ -30,8 +31,6 @@ const STRETCH_EVERY = 9;
 const STRETCH_LENGTH = 1.4;
 const SIP_EVERY = 7;
 const SIP_LENGTH = 2.5;
-const DANCE_BEATS_PER_SECOND = 4;
-const DANCE_MOVES: ReadonlyArray<{ pose: Pose; lift: number }> = [{ pose: 'stretch', lift: 0 }, { pose: 'stand', lift: 2 }, { pose: 'raise', lift: 0 }, { pose: 'stand', lift: 2 }];
 
 export interface RenderInput {
   g: CanvasRenderingContext2D;
@@ -168,8 +167,7 @@ function chooseFrame(actor: Actor, activity: Activity | undefined, time: number,
       default: pose = every(STRETCH_EVERY, STRETCH_LENGTH) ? 'stretch' : 'sit';
     }
   } else if (actor.isDancing && !reduceMotion) {
-    // 춤: 두 팔 번쩍 → 모음(살짝 점프) → 한 팔 → 모음
-    const move = DANCE_MOVES[Math.floor(time * DANCE_BEATS_PER_SECOND + actor.slot) % DANCE_MOVES.length];
+    const move = danceMoveAt(actor.slot, time);
     pose = move.pose; lift = move.lift;
   } else if (actor.place === 'lounge') pose = every(SIP_EVERY, SIP_LENGTH) ? 'drink' : 'stand';
   else if (actor.place === 'server') pose = Math.floor(time * 4) % 2 ? 'type1' : 'type2';

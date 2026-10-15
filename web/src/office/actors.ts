@@ -1,5 +1,6 @@
 // 에이전트 상태(AgentSnapshot)를 보고 캐릭터를 어느 방으로 걸어가게 할지 정한다.
 // 서버 상태는 순간순간 바뀌지만, 캐릭터는 걸어서 움직이므로 여기서 이동과 머무는 시간을 관리한다.
+import { danceFacingAt } from './dance.ts';
 import type { Activity, AgentSnapshot, ToolKind } from '../../../shared/protocol.ts';
 import { BEDS, COURIER_STAND, DANCE_SPOTS, HEAD_SEAT, LIBRARY_SPOTS, LOUNGE_SPOTS, MAIL_STAND, MEETING_SEATS, OUTSIDE, SEATS, SERVER_SPOTS, WANDER_AREA, findPath, isWalkable, type Spot } from './map.ts';
 import { lookFor, type Look } from './look.ts';
@@ -18,8 +19,6 @@ const CLUB_CONTEXT_RATIO = 0.8;
 /** 컨텍스트가 차도 이 상태일 때는 원래 가던 곳으로 간다 (요약 중이면 수면실, 끝났으면 퇴근) */
 const NOT_FOR_CLUB: ReadonlySet<Activity> = new Set(['compacting', 'ended']);
 /** 춤출 때 도는 방향 (박자마다 하나씩) */
-const DANCE_FACINGS: readonly Facing[] = ['down', 'left', 'down', 'right'];
-const DANCE_TURNS_PER_SECOND = 2;
 /** 한 턴을 마치면 이만큼 웃는다 */
 const CHEER_SECONDS = 3;
 /** 팀원이 메시지를 보내면 그 말풍선을 이만큼 띄운다 */
@@ -305,7 +304,7 @@ export class ActorDirector {
 
   /** 지금 이 캐릭터가 바라봐야 하는 방향 (리더 쪽 돌아보기가 걷기보다 우선은 아니다) */
   facingOf(actor: Actor): Facing {
-    if (actor.isDancing) return DANCE_FACINGS[Math.floor(this.clock * DANCE_TURNS_PER_SECOND + actor.slot) % DANCE_FACINGS.length];
+    if (actor.isDancing) return danceFacingAt(actor.slot, this.clock);
     if (actor.lookAt && actor.lookAt.until > this.clock && !actor.isMoving) return actor.lookAt.facing;
     return actor.facing;
   }
