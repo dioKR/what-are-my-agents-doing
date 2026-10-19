@@ -28,6 +28,24 @@ What's new in each version: [CHANGELOG](CHANGELOG.md).
 
 ---
 
+## Which Claude sessions show up
+
+One character is **one Claude Code conversation running on this computer**. To get more characters, run more conversations at the same time.
+
+| Where you talk to Claude | Shows up | Why |
+|---|---|---|
+| Claude Code in a terminal (including Orca and other terminal tools) | ✅ | Runs on this computer |
+| Claude Code extension for VS Code | ✅ one per conversation | Runs Claude Code on this computer |
+| Claude desktop app, **Code** tab, running on this computer | ✅ one per session | Runs Claude Code on this computer |
+| Claude desktop app **Chat** tab, claude.ai | ❌ | Not Claude Code: the conversation runs only on Anthropic's servers and leaves nothing on this computer to read |
+| Cloud sessions (Code tab cloud sessions, claude.ai/code on the web) | ❌ | Runs on a remote machine, not this one |
+| Codex CLI, Gemini CLI | ❌ not yet | Planned (see Roadmap) |
+
+- A conversation with no activity for an hour leaves the office.
+- Agent team teammates each get their own character. Subagents show as a small "+N sub" next to their character.
+
+---
+
 ## Desktop app (no terminal needed)
 
 Download it from the homepage: **https://dioKR.github.io/what-are-my-agents-doing/**
