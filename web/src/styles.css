@@ -66,8 +66,15 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 
 .mapwrap { min-width: 0; }
 .mapbox { width: fit-content; max-width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 8px; }
-.stage { position: relative; align-self: center; border: 3px solid var(--line); background: #2c4a22; }
-#map { display: block; image-rendering: pixelated; cursor: pointer; }
+.stage { position: relative; align-self: center; border: 3px solid var(--line); background: #2c4a22; overflow: hidden; }
+#map { display: block; image-rendering: pixelated; cursor: pointer; touch-action: none; }
+#map.zoomed { cursor: grab; }
+#map.dragging { cursor: grabbing; }
+/* 지도 확대 · 축소 · 맞추기 (오른쪽 아래, 오른쪽 위는 ??? 방이라 비워 둔다) */
+.zoom-controls { position: absolute; right: 8px; bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
+.zoom-controls button { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; background: var(--panel); color: var(--text); border: 2px solid var(--line); cursor: pointer; }
+.zoom-controls button:hover { color: var(--amber); border-color: var(--amber); }
+.zoom-controls button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
 
 .agentbar { display: flex; gap: 6px; flex-wrap: wrap; }

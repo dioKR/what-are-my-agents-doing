@@ -201,6 +201,23 @@ test('오른쪽 클릭 메뉴: 카드에서 열어 이름 바꾸기를 열고, �
   assert.equal((await fetch(`${url}/api/agents/open-folder`, { method: 'POST', headers: evil, body: '{"id":"menu1"}' })).status, 403);
 });
 
+test('지도 확대 · 이동: + 단추로 확대하고, 끌어서 움직이고, 전체 보기로 되돌린다', async () => {
+  await page.click('[data-zoom="in"]');
+  await page.click('[data-zoom="in"]');
+  assert.ok(await page.$eval('#map', (c) => c.classList.contains('zoomed')));
+  const before = await page.$eval('#map', (c) => c.style.transform);
+  const box = await page.locator('#map').boundingBox();
+  const stage = await page.locator('#stage').boundingBox();
+  await page.mouse.move(stage.x + stage.width / 2, stage.y + stage.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(stage.x + stage.width / 2 - 120, stage.y + stage.height / 2 - 60, { steps: 6 });
+  await page.mouse.up();
+  assert.notEqual(await page.$eval('#map', (c) => c.style.transform), before);
+  assert.ok(box.width > stage.width); // 확대하면 지도가 틀보다 커진다
+  await page.click('[data-zoom="reset"]');
+  assert.equal(await page.$eval('#map', (c) => c.style.transform), '');
+});
+
 test('지금까지 브라우저 오류가 없다', () => {
   assert.deepEqual(pageErrors, []);
 });

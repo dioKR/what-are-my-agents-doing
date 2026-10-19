@@ -51,6 +51,11 @@
           <canvas id="map" width="608" height="432" data-i18n-aria="map.aria"></canvas>
           <div class="labels" id="labels" aria-hidden="true"></div>
           <div class="alerts" id="alerts" aria-live="polite"></div>
+          <div class="zoom-controls" role="group" data-i18n-aria="zoom.title">
+            <button type="button" data-zoom="in" data-i18n-aria="zoom.in" data-i18n-title="zoom.in"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M7 2h2v5h5v2H9v5H7V9H2V7h5z"/></svg></button>
+            <button type="button" data-zoom="out" data-i18n-aria="zoom.out" data-i18n-title="zoom.out"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M2 7h12v2H2z"/></svg></button>
+            <button type="button" data-zoom="reset" data-i18n-aria="zoom.reset" data-i18n-title="zoom.reset"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" shape-rendering="crispEdges"><path fill="currentColor" d="M1 1h5v2H3v3H1zM10 1h5v5h-2V3h-3zM1 10h2v3h3v2H1zM13 10h2v5h-5v-2h3z"/></svg></button>
+          </div>
           <div class="empty" id="empty" hidden>
             <h2 data-i18n="empty.title"></h2>
             <ol>
