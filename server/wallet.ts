@@ -4,16 +4,29 @@ import { homedir } from 'node:os';
 import { join } from 'node:path';
 import type { AgentSnapshot } from '../shared/protocol.ts';
 import { EMPTY_WALLET, REWARD_COINS, shopItem, type EarnedCoins, type Equipped, type RewardReason, type ShopSlot, type WalletState } from '../shared/shop.ts';
-import type { ClaudeHookPayload } from './claudeHook.ts';
+import { didToolFail, type ClaudeHookPayload } from './claudeHook.ts';
 import { JsonFileStore } from './jsonFileStore.ts';
 
 const MAX_RECENT = 20;
 const WORKING: ReadonlySet<AgentSnapshot['activity']> = new Set(['working', 'thinking']);
+/** 명령 안의 git push (git -C 폴더 push 같은 꼴도). --dry-run은 실제로 올리지 않으니 뺀다 */
+const GIT_PUSH = /\bgit\b(?:\s+-C\s+\S+)?\s+push\b(?![^;&|]*--dry-run)/;
+
+/**
+ * 에이전트가 실행한 git push가 성공했는지. 훅은 명령(tool_input)을 함께 주지만,
+ * 대화 기록에서 온 끝 이벤트에는 명령이 없어서 시작할 때 남긴 detail("Bash git push …")을 본다.
+ */
+function pushedSuccessfully(prev: AgentSnapshot | undefined, event: ClaudeHookPayload): boolean {
+  if (event.hook_event_name !== 'PostToolUse' || event.tool_name !== 'Bash' || didToolFail(event.tool_response)) return false;
+  const command = typeof event.tool_input?.command === 'string' ? event.tool_input.command : prev?.detail ?? '';
+  return GIT_PUSH.test(command);
+}
 
 /** 이벤트 하나로 상태가 prev → next로 바뀔 때 받을 코인 (같은 이유가 여러 번이면 여러 개) */
 export function rewardsFor(prev: AgentSnapshot | undefined, next: AgentSnapshot, event: ClaudeHookPayload): RewardReason[] {
   const reasons: RewardReason[] = [];
   if (event.hook_event_name === 'Stop' && prev && WORKING.has(prev.activity)) reasons.push('turn');
+  if (pushedSuccessfully(prev, event)) reasons.push('push');
   if (event.hook_event_name === 'TaskCompleted' && prev?.teamTasks.some((t) => t.id === event.task_id && t.status === 'open')) reasons.push('teamTask');
   // 할 일: 이번에 새로 '완료'가 된 항목만 센다
   const doneBefore = new Set((prev?.todos ?? []).filter((t) => t.status === 'completed').map((t) => t.content));

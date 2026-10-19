@@ -10,7 +10,7 @@ import { escapeHtml, setHtml } from '../panels/dom.ts';
 import { lt, t } from '../i18n.ts';
 import { currentWallet, equippedOf } from './wallet.ts';
 
-const REASONS: RewardReason[] = ['turn', 'todo', 'teamTask', 'pr'];
+const REASONS: RewardReason[] = ['turn', 'todo', 'push', 'teamTask', 'pr'];
 const petPreviews = new Map<string, string>();
 
 function previewSrc(item: ShopItem, doll: DollLook): string {
