@@ -52,6 +52,12 @@
     .feature { background: var(--panel); border: 2px solid var(--line); padding: 14px 16px; }
     .feature b { display: block; font-family: var(--pixel); font-weight: 400; color: var(--amber); margin-bottom: 4px; }
     .feature p { margin: 0; color: var(--muted); font-size: 15px; }
+    .sessions { width: 100%; border-collapse: collapse; background: var(--panel); border: 2px solid var(--line); font-size: 15px; }
+    .sessions th, .sessions td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    .sessions th { font-family: var(--pixel); font-weight: 400; color: var(--amber); }
+    .sessions td:nth-child(2) { white-space: nowrap; }
+    .sessions td:last-child { color: var(--muted); }
+    .table-scroll { overflow-x: auto; }
 
     .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 18px; }
     .steps article { background: var(--panel); border: 2px solid var(--line); padding: 16px 18px; }
@@ -121,6 +127,31 @@
           <div class="feature"><b lang="en">Dress-up shop</b><b lang="ko">꾸미기 상점</b><p lang="en">Agents earn coins by working. Spend them on hats and pets that follow them around.</p><p lang="ko">에이전트가 일하면 코인이 쌓입니다. 그 코인으로 모자를 씌우고 졸졸 따라다니는 펫을 사 줄 수 있습니다.</p></div>
           <div class="feature"><b lang="en">Meeting room</b><b lang="ko">회의실</b><p lang="en">Claude Code agent teams gather here and pass letters to each other.</p><p lang="ko">Claude Code 에이전트 팀이 모여 서로 편지를 주고받습니다.</p></div>
         </div>
+      </section>
+
+      <section id="sessions">
+        <h2><span lang="en">Which Claude sessions show up</span><span lang="ko">어떤 대화가 보이나요</span></h2>
+        <p>
+          <span lang="en">One character is one Claude Code conversation running on this computer. Run more conversations at the same time to get more characters.</span>
+          <span lang="ko">캐릭터 하나는 이 컴퓨터에서 돌고 있는 Claude Code 대화 하나입니다. 대화를 여러 개 동시에 열면 캐릭터도 늘어납니다.</span>
+        </p>
+        <div class="table-scroll">
+          <table class="sessions">
+            <thead><tr><th><span lang="en">Where you talk to Claude</span><span lang="ko">Claude와 대화하는 곳</span></th><th><span lang="en">Shows up</span><span lang="ko">보이나</span></th><th><span lang="en">Why</span><span lang="ko">이유</span></th></tr></thead>
+            <tbody>
+            <tr><td><span lang="en">Claude Code in a terminal (incl. Orca)</span><span lang="ko">터미널의 Claude Code (Orca 포함)</span></td><td>✅</td><td><span lang="en">Runs on this computer</span><span lang="ko">이 컴퓨터에서 돕니다</span></td></tr>
+            <tr><td><span lang="en">Claude Code extension for VS Code</span><span lang="ko">VS Code의 Claude Code 확장</span></td><td>✅</td><td><span lang="en">One character per conversation</span><span lang="ko">대화마다 한 명</span></td></tr>
+            <tr><td><span lang="en">Claude desktop app, <b>Code</b> tab (on this computer)</span><span lang="ko">Claude 데스크톱 앱 <b>Code</b> 탭 (이 컴퓨터에서 실행)</span></td><td>✅</td><td><span lang="en">One character per session</span><span lang="ko">세션마다 한 명</span></td></tr>
+            <tr><td><span lang="en">Claude desktop app <b>Chat</b> tab, claude.ai</span><span lang="ko">Claude 데스크톱 앱 <b>Chat</b> 탭, claude.ai</span></td><td>❌</td><td><span lang="en">Not Claude Code. The chat runs only on Anthropic's servers and leaves nothing on this computer</span><span lang="ko">Claude Code가 아닙니다. 대화가 Anthropic 서버에서만 돌고 이 컴퓨터에 기록이 남지 않습니다</span></td></tr>
+            <tr><td><span lang="en">Cloud sessions (claude.ai/code, Code tab cloud sessions)</span><span lang="ko">클라우드 세션 (claude.ai/code, Code 탭의 클라우드 세션)</span></td><td>❌</td><td><span lang="en">Runs on a remote machine</span><span lang="ko">원격 컴퓨터에서 돕니다</span></td></tr>
+            <tr><td><span lang="en">Codex CLI, Gemini CLI</span><span lang="ko">Codex CLI, Gemini CLI</span></td><td>❌</td><td><span lang="en">Not yet, planned</span><span lang="ko">아직 지원하지 않습니다 (예정)</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          <span lang="en">A conversation with no activity for an hour leaves the office. Agent team teammates each get their own character.</span>
+          <span lang="ko">1시간 동안 움직임이 없는 대화는 사무실에서 빠집니다. 에이전트 팀의 팀원은 한 명씩 캐릭터가 됩니다.</span>
+        </p>
       </section>
 
       <section id="first-launch">
