@@ -12,15 +12,51 @@ npm run server   # local server (4545) in another terminal
 
 Node.js 23.6 or later runs the TypeScript sources directly.
 
+## How we work: branches and PRs
+
+We use a simple flow: **`main` is always releasable, and every change goes in through a pull request.**
+
+1. **Big change? Open an issue first.** For a new feature or a large refactor, describe it in an issue so we can agree on the direction before you spend time on it. Small fixes can go straight to a PR.
+2. **Branch from `main`** (or from `main` of your fork) with a short name that starts with the kind of change:
+
+   | Prefix | For | Example |
+   |---|---|---|
+   | `feat/` | a new feature | `feat/records` |
+   | `fix/` | a bug fix | `fix/windows-static-path` |
+   | `docs/` | documentation only | `docs/contributing` |
+   | `ci/` | GitHub Actions and checks | `ci/windows-app-check` |
+   | `chore/` | tooling, dependencies, releases | `chore/changesets` |
+   | `refactor/` | code changes that don't change behavior | `refactor/json-store` |
+
+3. **Keep one PR to one change.** Small PRs get reviewed and merged faster. If you find an unrelated problem on the way, open a separate PR or issue.
+4. **Open the PR against `main`** and fill in the template. Add a screenshot or GIF for anything visual.
+5. **Merge when CI is green.** `main` is protected: nobody (maintainers included) can push to it directly, force-push it or delete it, and the `check` job must pass. PRs are **squash-merged**, so the PR title becomes the commit on `main`. Write the title as `type: what changed`, for example `fix: keep renamed agents after cd`.
+6. **Releases are cut from `main` only**, by tagging `vX.Y.Z` (see "Releasing" below). An urgent fix follows the same flow on a `fix/` branch and ships as a patch version.
+
+Long-lived branches (`develop`, `release/*`) are not used. Rebase or merge `main` into your branch if it falls behind; either is fine.
+
+## Project layout
+
+| Folder | What's inside |
+|---|---|
+| `server/` | Local server (127.0.0.1 only): reads hooks and transcripts, keeps agent state, wallet and records, serves the page |
+| `shared/` | Types and rules both the server and the page use (protocol, shop, records). Change these and both sides change together |
+| `web/` | The page: office map, pixel characters, panels, shop and records popups |
+| `desktop/` | Electron app: tray menu, update notice, wraps the same server and page |
+| `hooks/`, `scripts/` | The Claude Code hook script and its installer |
+| `team/` | Agent team kit (role-based teammates) |
+| `e2e/` | Browser and desktop app tests |
+
 ## Checks (CI runs these on every PR)
 
 ```bash
 npm run typecheck
 npm test                        # server logic, wallet rules, pixel art data
 npm run build && npm run test:e2e   # opens the page in your installed Chrome and checks for errors
+npm run build:server && npm run test:desktop   # opens the desktop app (macOS or Windows) and checks the window
 ```
 
-A PR can be merged when CI is green. If the browser test fails, CI keeps a screenshot as an artifact.
+CI also runs the browser and desktop app tests on Windows. If you are on a Mac, you can still see the Windows result: open the CI run and download the `windows-screens` artifact (a screenshot of the app window). If the browser test fails, CI keeps a screenshot as well.
 
 ## Pixel art
 

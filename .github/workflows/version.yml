@@ -26,6 +26,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.CHANGESETS_TOKEN || github.token }}
+          # 이미 붙은 태그(v0.4.0 등)를 알아야 같은 태그를 또 만들려다 실패하지 않는다
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 24

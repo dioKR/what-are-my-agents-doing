@@ -1,7 +1,7 @@
 // 손으로 찍은 캐릭터 도트의 모양
 export type View = 'down' | 'up' | 'left';
 export type StepPose = 'stand' | 'step1' | 'step2';
-export type ArmPose = 'down' | 'swing1' | 'swing2' | 'type1' | 'type2' | 'raise' | 'chin' | 'up';
+export type ArmPose = 'down' | 'swing1' | 'swing2' | 'type1' | 'type2' | 'raise' | 'chin' | 'up' | 'waveLeftUp' | 'spread' | 'waveRightUp';
 
 /** 32칸 너비 덧칠. y는 첫 줄이 놓이는 줄 */
 export interface Stamp { y: number; rows: string[] }

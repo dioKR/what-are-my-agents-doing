@@ -4,17 +4,18 @@
 // - npm 패키지(npx wamad)로 실행하면: 패키지 위치는 바뀌거나 지워질 수 있어(npx 임시 폴더), 파일 경로가 필요 없는 curl 훅을 쓴다
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { curlHookCommand, updateClaudeHooks } from './claude-hooks-lib.mjs';
+import { curlHookCommand, curlPermissionHookCommand, updateClaudeHooks } from './claude-hooks-lib.mjs';
 
 const DEFAULT_PORT = 4545;
 const hookScript = fileURLToPath(new URL('../hooks/claude-hook.mjs', import.meta.url));
 const fromSource = existsSync(fileURLToPath(new URL('../server/index.ts', import.meta.url)));
 const port = Number(process.env.WAMAD_PORT ?? DEFAULT_PORT);
 const command = fromSource ? `node "${hookScript}"` : curlHookCommand(port);
+const permissionCommand = fromSource ? command : curlPermissionHookCommand(port);
 const uninstall = process.argv.includes('--uninstall');
 const dryRun = process.argv.includes('--dry-run');
 
-const result = await updateClaudeHooks({ command, uninstall, dryRun, extraMarkers: [hookScript] });
+const result = await updateClaudeHooks({ command, permissionCommand, uninstall, dryRun, extraMarkers: [hookScript] });
 if (dryRun) {
   console.log(result.output);
   console.log(`(--dry-run: ${result.path} 에 저장하지 않았습니다)`);

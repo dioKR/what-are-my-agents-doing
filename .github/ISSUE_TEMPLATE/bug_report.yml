@@ -1,0 +1,44 @@
+name: Bug report
+description: Something doesn't work or looks wrong
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you expect, and what happened instead? Screenshots help a lot.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can we see it?
+      placeholder: |
+        1. Open the app
+        2. Start Claude Code and ...
+  - type: dropdown
+    id: install
+    attributes:
+      label: How do you run it?
+      options:
+        - Desktop app (dmg / Windows installer)
+        - npm (wamad command)
+        - From source (npm start)
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - macOS (Apple silicon)
+        - macOS (Intel)
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Desktop app tray menu → "Check now (current vX.Y.Z)", or `npm ls -g what-are-my-agents-doing`

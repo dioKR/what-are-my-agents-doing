@@ -1,10 +1,10 @@
 // Claude Code 훅이 보내는 JSON을 받아 에이전트 상태(AgentSnapshot)로 바꾼다.
 // 순수 함수만 둔다: 같은 입력이면 같은 결과. 파일 읽기 같은 일은 index.ts가 한다.
-import { basename, relative, isAbsolute } from 'node:path';
 import { STUCK_FAIL_STREAK, type Activity, type AgentSnapshot, type MailRecord, type TodoItem } from '../shared/protocol.ts';
 import { PHRASES, cleanPrompt, firstParagraph, humanizeTool, mailSummary, messageSent, requestReceived } from './humanize.ts';
 import { extractLinks } from './links.ts';
 import { projectDirOf } from './projectDir.ts';
+import { shortPath } from './shortPath.ts';
 import type { AgentLink, LocalText } from '../shared/protocol.ts';
 
 export interface ClaudeHookPayload {
@@ -111,6 +111,9 @@ export function applyClaudeHook(prev: AgentSnapshot | undefined, payload: Claude
       return applyToolEnd(next, payload, true);
     case 'Notification':
       return applyNotification(next, payload.message ?? '');
+    case 'PermissionRequest':
+      // 권한을 묻는 순간 바로 온다 (Notification은 6초쯤 기다린 뒤에 온다)
+      return { ...next, activity: 'waiting-permission', detail: describeTool(payload.tool_name ?? '', payload.tool_input ?? {}, next.cwd), summary: PHRASES.waitingPermission };
     case 'Stop':
       return { ...withRecent(next, now, PHRASES.turnFinished), activity: 'waiting-user', detail: '', summary: PHRASES.waitingForInstruction };
     case 'SubagentStart':
@@ -259,13 +262,6 @@ export function describeTool(toolName: string, input: Record<string, unknown>, c
   return target ? `${toolName} ${truncate(target, 60)}` : toolName;
 }
 
-function shortPath(path: string, cwd: string): string {
-  if (cwd && isAbsolute(path)) {
-    const rel = relative(cwd, path);
-    if (!rel.startsWith('..')) return rel;
-  }
-  return basename(path);
-}
 
 function readTodos(input: Record<string, unknown>): TodoItem[] {
   const raw = input.todos;

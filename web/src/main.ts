@@ -24,6 +24,11 @@ import { applyStaticTexts, currentLang, setLang, t, type Lang } from './i18n.ts'
 import type { ShopSlot } from '../../shared/shop.ts';
 import { PetKeeper } from './office/pets/pets.ts';
 import { renderShop } from './shop/shopPanel.ts';
+import { renderRecords, setRecords } from './records/recordsPanel.ts';
+import { deleteSheet, downloadSheetTemplate, syncCustomCharacters, uploadSheet, type UploadResult } from './characters/library.ts';
+import { SHEET_CHARACTER_PREFIX } from '../../shared/characterSheet.ts';
+import { askOf, decide, setApprovalAsks, setApprovalsEnabled, setAppSettings } from './approvals/approvals.ts';
+import { closeAgentMenu, moveMenuFocus, openAgentMenu } from './panels/agentMenu.ts';
 import { activeCoinPops, addCoinPop, buyItem, currentWallet, equipItem, equippedOf, setWallet } from './shop/wallet.ts';
 
 const MAP_PX_W = MAP_W * TILE;
@@ -38,10 +43,14 @@ const canvas = byId<HTMLCanvasElement>('map');
 canvas.width = VIEW.w * TILE;
 canvas.height = VIEW.h * TILE;
 const g = canvas.getContext('2d')!;
+// 데스크톱 앱에는 터미널 명령이 없으니, 훅 설치를 앱 아이콘 메뉴로 안내한다
+const isDesktopApp = navigator.userAgent.includes('Electron/');
+if (isDesktopApp) byId('hookStep').dataset.i18n = 'empty.step2.desktop';
+
 const els = {
   stage: byId('stage'), mapWrap: byId('mapwrap'), labels: byId('labels'), empty: byId('empty'),
   agentBar: byId('agentbar'), alerts: byId('alerts'), inspector: byId('inspector'), tabPanel: byId('tabpanel'),
-  connection: byId('connection'), coinCount: byId('coinCount'), shop: byId<HTMLDialogElement>('shop')
+  connection: byId('connection'), coinCount: byId('coinCount'), shop: byId<HTMLDialogElement>('shop'), records: byId<HTMLDialogElement>('records'), agentMenu: byId('agentMenu')
 };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -63,6 +72,8 @@ let selectedId: string | null = null;
 let renamingId: string | null = null;
 /** 꾸미는 중인 에이전트와 고르는 중인 생김새 (저장 전) */
 let customizing: { id: string; draft: DollLook } | null = null;
+/** 캐릭터 시트를 올린 결과 한 줄. 꾸미기를 닫으면 지운다 */
+let sheetStatus: string | null = null;
 const TIME_MODES: readonly TimeMode[] = ['auto', 'day', 'evening', 'night'];
 const timeParam = new URLSearchParams(location.search).get('time') as TimeMode | null;
 /** ?time=night 처럼 주소로 시간대를 고정해 열 수도 있다 (캡처·공유용) */
@@ -78,6 +89,24 @@ function applyMessage(message: ServerMessage): void {
   if (message.type === 'wallet') {
     setWallet(message.wallet);
     agents.forEach((agent) => director.refreshLook(agent)); // 머리 장식을 바꿨으면 바로 입힌다
+    return;
+  }
+  if (message.type === 'settings') {
+    setAppSettings(message.settings);
+    byId<HTMLInputElement>('approvalsEnabled').checked = message.settings.approvals;
+    return;
+  }
+  if (message.type === 'approvals') {
+    setApprovalAsks(message.asks);
+    return;
+  }
+  if (message.type === 'characters') {
+    // 시트 그림을 다 불러오면 지도 · 카드의 캐릭터를 다시 그린다
+    syncCustomCharacters(message.characters, refreshPanels);
+    return;
+  }
+  if (message.type === 'records') {
+    setRecords(message.records);
     return;
   }
   if (message.type === 'reward') {
@@ -115,18 +144,21 @@ function buildViews(): AgentView[] {
     });
 }
 
+const viewOf = (id: string): AgentView | undefined => buildViews().find((v) => v.agent.id === id);
+
 function refreshPanels(): void {
   const views = buildViews();
   renderAgentBar(els.agentBar, views, selectedId);
   renderAlerts(els.alerts, views, Date.now());
   const selected = views.find((v) => v.agent.id === selectedId);
-  if (customizing && selected && customizing.id === selected.agent.id) renderLookEditor(els.inspector, selected, customizing.draft);
+  if (customizing && selected && customizing.id === selected.agent.id) renderLookEditor(els.inspector, selected, customizing.draft, sheetStatus);
   else renderInspector(els.inspector, selected, renamingId === selectedId);
   renderLogTab(els.tabPanel, tab, views, selected);
   els.empty.hidden = agents.size > 0;
   els.connection.textContent = connected ? t('app.connected', { n: agents.size }) : t('app.connecting');
   els.coinCount.textContent = String(currentWallet().coins);
   if (els.shop.open) renderShop(els.shop, shopTab, views, selected);
+  if (els.records.open) renderRecords(els.records, views, Date.now());
 }
 
 /** 언어를 바꾸면 고정 글자와 패널을 다시 그린다 */
@@ -147,6 +179,16 @@ function fitToWidth(): void {
 }
 
 // ---------- 입력 ----------
+// 기록실: 열기 · 닫기
+document.addEventListener('click', (event) => {
+  if (event.target === els.records) { els.records.close(); return; } // 창 바깥(어두운 배경)을 누르면 닫는다
+  const target = (event.target as HTMLElement).closest<HTMLElement>('[data-records-open],[data-records-close]');
+  if (!target) return;
+  if (target.hasAttribute('data-records-open')) els.records.showModal();
+  else els.records.close();
+  refreshPanels();
+});
+
 // 꾸미기 상점: 열기 · 닫기 · 탭 · 사기 · 입히기 · 벗기기 (캐릭터 고르기는 아래 공통 처리의 data-select가 맡는다)
 document.addEventListener('click', (event) => {
   if (event.target === els.shop) { els.shop.close(); return; } // 창 바깥(어두운 배경)을 누르면 닫는다
@@ -177,11 +219,7 @@ document.addEventListener('click', (event) => {
   }
   if (target.hasAttribute('data-look-cancel')) stopCustomizing();
   const preset = PRESETS.find((p) => p.id === target.dataset.lookPreset);
-  if (preset && customizing) {
-    customizing = { ...customizing, draft: { ...preset.look } };
-    const actor = director.actors.get(customizing.id);
-    if (actor) actor.look = toLook(customizing.draft);
-  }
+  if (preset) tryOn({ ...preset.look });
   if (target.dataset.lang === 'ko' || target.dataset.lang === 'en') switchLang(target.dataset.lang);
   if (target.dataset.time) {
     timeMode = target.dataset.time as TimeMode;
@@ -197,15 +235,67 @@ document.addEventListener('click', (event) => {
   if (renamingId) byId<HTMLInputElement>('renameInput')?.select();
 });
 
+/** 꾸미는 중인 캐릭터에 저장 전 모습을 입혀 본다 */
+function tryOn(draft: DollLook): void {
+  if (!customizing) return;
+  customizing = { ...customizing, draft };
+  const actor = director.actors.get(customizing.id);
+  if (actor) actor.look = toLook(draft);
+}
+
 /** 저장하지 않고 꾸미기를 닫으면 저장된(또는 기본) 모습으로 되돌린다 */
 function stopCustomizing(): void {
   const agent = customizing && agents.get(customizing.id);
   if (agent) director.refreshLook(agent);
   customizing = null;
+  sheetStatus = null;
+}
+
+// 앱에서 허용 · 거부 (결과는 서버가 실시간 연결로 다시 알려 준다)
+document.addEventListener('click', (event) => {
+  const target = (event.target as HTMLElement).closest<HTMLElement>('[data-approve],[data-deny],[data-approvals-enable]');
+  if (!target) return;
+  if (target.dataset.approve) void decide(target.dataset.approve, 'allow');
+  if (target.dataset.deny) void decide(target.dataset.deny, 'deny');
+  if (target.hasAttribute('data-approvals-enable')) void setApprovalsEnabled(true);
+});
+byId<HTMLInputElement>('approvalsEnabled').addEventListener('change', (event) => {
+  void setApprovalsEnabled((event.target as HTMLInputElement).checked);
+});
+
+// 캐릭터 시트: 올린 캐릭터 입혀 보기 · 지우기 · 템플릿 내려받기
+document.addEventListener('click', (event) => {
+  const target = (event.target as HTMLElement).closest<HTMLElement>('[data-look-sheet],[data-sheet-delete],[data-sheet-template]');
+  if (!target || !customizing) return;
+  if (target.dataset.lookSheet) tryOn({ ...customizing.draft, character: `${SHEET_CHARACTER_PREFIX}${target.dataset.lookSheet}` });
+  if (target.dataset.sheetDelete) void deleteSheet(target.dataset.sheetDelete);
+  if (target.hasAttribute('data-sheet-template')) downloadSheetTemplate(customizing.draft);
+  refreshPanels();
+});
+
+// 캐릭터 시트 올리기: 검사를 통과하면 올린 캐릭터를 바로 입혀 본다
+document.addEventListener('change', (event) => {
+  const input = (event.target as HTMLElement).closest<HTMLInputElement>('[data-sheet-upload]');
+  const file = input?.files?.[0];
+  if (!file) return;
+  void uploadSheet(file).then((result) => {
+    sheetStatus = uploadMessage(result);
+    if (result.ok && customizing) tryOn({ ...customizing.draft, character: `${SHEET_CHARACTER_PREFIX}${result.character.id}` });
+    refreshPanels();
+  });
+});
+
+function uploadMessage(result: UploadResult): string {
+  if (result.ok) return t('look.sheetOk', { name: result.character.name });
+  if (result.error === 'missing-cells') return t('look.sheetMissing', { cells: result.missing.join(', ') });
+  if (result.error === 'wrong-size') return t('look.sheetWrongSize');
+  if (result.error === 'not-image') return t('look.sheetNotImage');
+  return t('look.sheetServer');
 }
 
 // 꾸미기: 고르는 즉시 지도 위 캐릭터에 입혀 본다
 document.addEventListener('change', (event) => {
+  if ((event.target as HTMLElement).hasAttribute('data-sheet-upload')) return; // 시트 올리기는 위에서 따로 처리한다
   const form = (event.target as HTMLElement).closest<HTMLFormElement>('[data-look-form]');
   const actor = form && customizing ? director.actors.get(customizing.id) : undefined;
   if (!form || !customizing || !actor) return;
@@ -221,6 +311,7 @@ document.addEventListener('submit', (event) => {
     const agent = agents.get(customizing.id);
     if (agent) saveLook(agent, customizing.draft);
     customizing = null;
+    sheetStatus = null;
     refreshPanels();
     return;
   }
@@ -233,7 +324,8 @@ document.addEventListener('submit', (event) => {
   refreshPanels();
 });
 
-canvas.addEventListener('click', (event) => {
+/** 지도에서 누른 곳에 있는 캐릭터 (가장 가까운 하나) */
+function actorIdAt(event: MouseEvent): string | null {
   const rect = canvas.getBoundingClientRect();
   const mx = ((event.clientX - rect.left) / rect.width) * VIEW_PX.w + VIEW_PX.x;
   const my = ((event.clientY - rect.top) / rect.height) * VIEW_PX.h + VIEW_PX.y;
@@ -244,8 +336,46 @@ canvas.addEventListener('click', (event) => {
     const distance = Math.hypot(mx - (box.x + DOLL_W / 2), my - (box.y + DOLL_H / 2));
     if (distance < HIT_RADIUS && (!best || distance < best.distance)) best = { id: actor.id, distance };
   }
-  if (best) { selectedId = best.id; renamingId = null; stopCustomizing(); refreshPanels(); }
+  return best?.id ?? null;
+}
+
+canvas.addEventListener('click', (event) => {
+  const id = actorIdAt(event);
+  if (id) { selectedId = id; renamingId = null; stopCustomizing(); refreshPanels(); }
 });
+
+// 오른쪽 클릭 메뉴: 지도 위 캐릭터와 위쪽 카드에서 연다
+document.addEventListener('contextmenu', (event) => {
+  const card = (event.target as HTMLElement).closest<HTMLElement>('.agentcard[data-select]');
+  const id = event.target === canvas ? actorIdAt(event) : card?.dataset.select ?? null;
+  const view = id ? viewOf(id) : undefined;
+  if (!view) { closeAgentMenu(els.agentMenu); return; }
+  event.preventDefault();
+  selectedId = view.agent.id;
+  refreshPanels();
+  openAgentMenu(els.agentMenu, view, askOf(view.agent.id), event.clientX, event.clientY);
+});
+
+// 메뉴 항목을 누르면 (항목 자체의 동작은 위의 공통 처리가 맡는다) 메뉴를 닫는다. 메뉴 밖을 눌러도 닫는다
+document.addEventListener('click', (event) => {
+  if (els.agentMenu.hidden) return;
+  const target = event.target as HTMLElement;
+  const dismiss = target.closest<HTMLElement>('[data-dismiss]')?.dataset.dismiss;
+  const folder = target.closest<HTMLElement>('[data-open-folder]')?.dataset.openFolder;
+  if (dismiss) void postAgentAction('dismiss', dismiss);
+  if (folder) void postAgentAction('open-folder', folder);
+  closeAgentMenu(els.agentMenu);
+});
+els.agentMenu.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowDown' || event.key === 'ArrowUp') { event.preventDefault(); moveMenuFocus(els.agentMenu, event.key === 'ArrowDown' ? 1 : -1); }
+  if (event.key === 'Escape' || event.key === 'Tab') closeAgentMenu(els.agentMenu);
+});
+window.addEventListener('resize', () => closeAgentMenu(els.agentMenu));
+window.addEventListener('scroll', () => closeAgentMenu(els.agentMenu), true);
+
+async function postAgentAction(action: 'dismiss' | 'open-folder', id: string): Promise<void> {
+  await fetch(`/api/agents/${action}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) }).catch(() => null);
+}
 
 // ---------- 반복 ----------
 closeSettingsOnClickAwayOrEscape(byId<HTMLDetailsElement>('settings'));

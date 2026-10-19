@@ -1,6 +1,6 @@
 {
   "name": "what-are-my-agents-doing",
-  "version": "0.2.1",
+  "version": "0.4.0",
   "description": "What Are My Agents Doing? — see which of your Claude Code agents are working, at a glance, as a pixel-art office",
   "keywords": [
     "claude-code",
@@ -53,6 +53,7 @@
     "dist:desktop": "npm run build && npm run build:server && electron-builder --publish never",
     "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run build:server",
     "test:e2e": "node --test \"e2e/**/*.test.mjs\"",
+    "test:desktop": "node --test e2e/desktop.app.mjs",
     "changeset:version": "changeset version && npm install --package-lock-only --ignore-scripts",
     "release": "changeset publish"
   },

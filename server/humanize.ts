@@ -1,6 +1,6 @@
 // 도구 호출을 사람이 읽는 한 문장으로 바꾼다. 화면이 언어를 고를 수 있게 한국어·영어를 함께 만든다.
 // 예: Bash "npm test" → { ko: '테스트 돌리는 중', en: 'Running tests' }
-import { basename, isAbsolute, relative } from 'node:path';
+import { shortPath } from './shortPath.ts';
 import { isBroadcastRecipient, type LocalText } from '../shared/protocol.ts';
 
 const MAX_TARGET = 40;
@@ -9,13 +9,13 @@ const both = (ko: string, en: string): LocalText => ({ ko, en });
 /** 자주 쓰는 고정 문장 */
 export const PHRASES = {
   waitingForInstruction: both('다음 지시를 기다리는 중', 'Waiting for the next instruction'),
-  thinkingAfterCompact: both('요약을 마치고 이어서 생각하는 중', 'Back from compacting, thinking'),
+  thinkingAfterCompact: both('컨텍스트 정리를 마치고 이어서 생각하는 중', 'Back from compacting, thinking'),
   readingRequest: both('요청을 읽고 생각하는 중', 'Reading the request'),
-  compacting: both('대화를 요약하는 중', 'Compacting the conversation'),
+  compacting: both('컨텍스트를 정리하는 중 (compact)', 'Compacting context'),
   sessionEnded: both('세션을 마침', 'Session ended'),
   waitingPermission: both('실행해도 되는지 승인을 기다리는 중', 'Waiting for your approval'),
   turnFinished: both('한 턴을 마침', 'Finished a turn'),
-  compactedLog: both('컨텍스트가 차서 대화를 요약함', 'Context filled up, compacted'),
+  compactedLog: both('컨텍스트가 차서 정리함 (compact)', 'Context filled up, compacted'),
   newRequest: both('새 요청 받음', 'Got a new request'),
   joinedTeam: both('회의실에 들어와 자리에 앉음', 'Joined the meeting room'),
   teammateIdle: both('맡은 일을 마치고 기다리는 중', 'Done for now, waiting')
@@ -31,7 +31,10 @@ export function mailSummary(channel: string, target: string, direction: 'sent' |
 }
 
 export function humanizeTool(toolName: string, input: Record<string, unknown>, cwd: string): LocalText {
-  const file = () => shortPath(text(input, 'file_path') || text(input, 'notebook_path') || text(input, 'path'), cwd);
+  const file = () => {
+    const target = text(input, 'file_path') || text(input, 'notebook_path') || text(input, 'path');
+    return target ? shortPath(target, cwd, MAX_TARGET) : 'file';
+  };
   switch (toolName) {
     case 'Read': return both(`${file()} 읽는 중`, `Reading ${file()}`);
     case 'Edit': case 'MultiEdit': case 'NotebookEdit': return both(`${file()} 고치는 중`, `Editing ${file()}`);
@@ -98,14 +101,6 @@ function clip(value: string, max = MAX_TARGET): string {
   return oneLine.length > max ? oneLine.slice(0, max - 1) + '…' : oneLine;
 }
 
-function shortPath(path: string, cwd: string): string {
-  if (!path) return 'file';
-  if (cwd && isAbsolute(path)) {
-    const rel = relative(cwd, path);
-    if (!rel.startsWith('..') && rel.length <= MAX_TARGET) return rel;
-  }
-  return basename(path);
-}
 
 function hostOf(url: string): string {
   try {

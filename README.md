@@ -95,6 +95,28 @@ Give Claude Code any task. Its character appears within a few seconds.
 
 - **Time of day** can be Now / Day / Evening / Night. "Now" follows your clock; at night the room lights, laptop screens and the street lamp turn on.
 - **Language** can be Korean or English. It starts from your browser language and remembers your choice.
+- **Allow / deny in the app** (off by default). See below.
+
+### Right-click menu
+
+Right-click a character on the map or a card at the top:
+
+- **Allow / Deny** (only while that agent is waiting for approval in the app)
+- **Rename**, **Customize**
+- **Open work folder** in Finder / File Explorer
+- **Open latest link** (the newest PR or local server it mentioned)
+- **Send out of the office**: hides it here only. Claude Code keeps running, and the agent comes back when it works again.
+
+The menu works with the keyboard too: focus a card, press the context menu key (or Shift+F10), then use ↑ ↓ and Enter.
+
+### Allow or deny permission prompts from the app
+
+Turn on "Answer permission prompts here" in the settings. When Claude Code asks for permission to run a tool, the agent's details panel shows what it wants to run with **Allow** and **Deny** buttons.
+
+- Claude Code waits up to **30 seconds** for your answer here. If you don't answer, it asks in the terminal as usual, so nothing gets stuck when the app is closed or you're not looking.
+- This uses Claude Code's `PermissionRequest` hook: the hook waits for the app's answer and hands it to Claude Code. Your deny rules in Claude Code still apply even if you press Allow.
+- The desktop app adds this hook automatically. If you use the `wamad` command, run `wamad hooks install` once again.
+- Only this computer's own page can answer: requests from other websites are refused.
 
 ![Night view](docs/images/night.png)
 
@@ -127,6 +149,29 @@ From the fifth agent on, the same four characters are reused with different hair
   - Poses: sit, type, think, raise hand, coffee, stretch, carry
   - Expressions: 6
 
+### Your own character (PNG sheet)
+
+You can draw your own character and put it in the office.
+
+1. Click "Customize", then **Download template**. You get a PNG of the current character in every direction and pose.
+2. Paint over it in a pixel art tool such as [Aseprite](https://www.aseprite.org/) or [Piskel](https://www.piskelapp.com/) (free, in the browser). Set the grid to 32×44 to see the cells.
+3. Click **Upload PNG**. The character walks around the office right away. Click **Save** to keep it on that agent.
+
+<p align="center"><img src="docs/images/sheet-template.png" width="704" alt="The character sheet template: 11 poses across, 4 directions down"></p>
+
+| | |
+|---|---|
+| Sheet size | 352×176 PNG with a transparent background |
+| One cell | 32×44 (one frame) |
+| Columns (poses) | stand, walk1, walk2, sit, type1, type2, think, raise, drink, stretch, carry |
+| Rows (directions) | down, up, left, right |
+| Required | stand, walk1 and walk2 facing down, up and left (9 cells) |
+| Empty cells | use the standing frame of the same direction; an empty right row mirrors the left row |
+
+- Uploaded sheets are saved in `~/.wamad/characters/` and work the same in the desktop app and from the terminal. Delete one with ✕ next to its name.
+- Uploaded characters are drawn exactly as painted, so shop headwear isn't drawn on them (pets still follow).
+- Characters from anime, games and other works are fine for fun on your own computer, but please don't share or publish those sheets. This project only ships its own original characters.
+
 ---
 
 ## Dress-up shop
@@ -147,6 +192,23 @@ Your agents earn coins by working, and you spend them on headwear and pets for t
 - Headwear: heart headband, sunglasses, cat ears, flower crown, party hat, Santa hat. Pets: chick, slime, cat, dog. Pets follow their character around.
 - Only work done while the app or server is running earns coins (old history read at startup doesn't count). A "+coins" pops up over the character when it earns.
 - The wallet is saved in `~/.wamad/wallet.json`, so it survives restarts and works the same in the desktop app and from the terminal.
+
+## Records (trophy icon)
+
+Click the trophy next to the gear to see the records your agents have set.
+
+<p align="center"><img src="docs/images/records.png" width="600" alt="The records window: most agents working at once, longest and fastest task, longest-surviving agent, all-time work and who is most senior and newest in the office"></p>
+
+- **Best:** the most agents working at once, the longest task, the fastest task and the longest-surviving agent. Each record shows who set it, the request it was working on, and when.
+- **All-time work:** tasks finished, tool calls and the total time spent on tasks.
+- **In the office now:** the most senior agent (started first) and the newest one (started last).
+
+How it counts:
+
+- A **task** runs from your request to the moment the agent finishes its reply. Replies that used no tools are left out, so "fastest task" isn't just a one-line answer.
+- **Working at once** counts agents that are neither waiting for you nor done.
+- An agent's **lifetime** runs from its start to its last activity.
+- Like coins, only what happens while the app or server is running counts, so restarting never counts the same task twice. Records are saved in `~/.wamad/records.json`.
 
 ## Team and meeting room
 
@@ -233,6 +295,7 @@ docs/index.html           homepage (GitHub Pages)
 
 - The server listens on **127.0.0.1 only**. Other machines on your network cannot reach it.
 - Transcripts are **read only**. They are never changed or deleted.
+- Allow / deny from the app is off by default. When on, only the page served by this server on this computer can answer (the server checks the Host and Origin headers and accepts JSON only).
 - Nothing is sent out. The only internet request is for the UI fonts (Google Fonts).
 - The desktop app asks GitHub once a day for the latest release number, to tell you when a new version is out. It sends nothing about you, and you can turn it off from the menu bar icon ("Check for new versions").
 - Sending results over Slack or email is done by the agents with their own tools. This tool only shows that it happened.
@@ -294,7 +357,11 @@ server/
   links.ts                finds PR URLs and local server URLs
   team.ts                 splits team events into lead and teammate states
   wallet.ts               coins earned from work, buying and equipping shop items (~/.wamad/wallet.json)
+  approvals.ts            allow / deny from the app: waits for your answer, checks the request comes from this page
+  characters.ts           uploaded character sheets (~/.wamad/characters/)
+  records.ts              records: tasks, busiest moment, longest-lived agent (~/.wamad/records.json)
 shared/shop.ts            shop items, prices and coin rules (shared by server and UI)
+shared/records.ts         record shapes (shared by server and UI)
 e2e/                      browser smoke test (Chrome)
 hooks/claude-hook.mjs     the hook Claude Code runs; it only forwards to the server
 team/agents/              role definitions (po, pm, design, fe, be, infra)
@@ -304,6 +371,8 @@ web/src/
   office/pets/             pets that follow their character (pixel art + follow logic)
   panels/                 cards, alerts, details, tabs, customizer, settings
   shop/                   dress-up shop window and wallet state
+  records/                records window (trophy icon)
+  characters/             uploaded character sheets: list, upload, template download
   i18n.ts                 UI language (Korean/English)
 ```
 

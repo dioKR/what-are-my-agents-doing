@@ -6,7 +6,7 @@ import { app, BrowserWindow, Menu, Tray, dialog, nativeImage, shell } from 'elec
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { startServer } from '../dist/server/app.mjs';
-import { curlHookCommand, hooksInstalled, updateClaudeHooks } from '../scripts/claude-hooks-lib.mjs';
+import { curlHookCommand, curlPermissionHookCommand, hooksInstalled, hooksOutdated, updateClaudeHooks } from '../scripts/claude-hooks-lib.mjs';
 import { DOWNLOAD_PAGE, fetchLatestVersion, isNewer } from './updates.mjs';
 
 const PORT = 4545;
@@ -74,7 +74,7 @@ function showWindow() {
 }
 
 async function setHooks(install) {
-  await updateClaudeHooks({ command: curlHookCommand(PORT), uninstall: !install });
+  await updateClaudeHooks({ command: curlHookCommand(PORT), permissionCommand: curlPermissionHookCommand(PORT), uninstall: !install });
   await refreshTray();
   if (install) {
     await dialog.showMessageBox({
@@ -160,6 +160,8 @@ app.whenReady().then(async () => {
   tray.on('click', showWindow);
   await refreshTray();
   showWindow();
+  // 예전 버전에서 연결한 훅에 새로 생긴 이벤트(권한 질문)를 더한다. 이미 연결을 허락한 우리 훅만 바꾼다
+  if (await hooksOutdated()) await updateClaudeHooks({ command: curlHookCommand(PORT), permissionCommand: curlPermissionHookCommand(PORT) }).catch(() => {});
   if (!(await hooksInstalled())) await askToConnect();
   void checkForUpdate();
   setInterval(() => void checkForUpdate(), UPDATE_CHECK_EVERY_MS);

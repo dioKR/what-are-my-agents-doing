@@ -53,6 +53,12 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .settings summary:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 .settings-panel { position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; display: grid; gap: 6px; padding: 12px; min-width: 230px; background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 rgba(0, 0, 0, .35); }
 .settings-panel .settings-label { margin: 4px 0 0; font-size: 12px; color: var(--muted); }
+.settings-check { display: flex; align-items: center; gap: 6px; font-size: 13px; cursor: pointer; }
+.settings-hint { margin: 0; max-width: 240px; font-size: 11px; line-height: 1.5; color: var(--muted); }
+/* 내 차례 박스의 허용 · 거부 */
+.approval { display: grid; gap: 6px; margin-top: 8px; }
+.approval code { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 4px 6px; background: var(--panel-2); border: 1px solid var(--line); font-size: 12px; }
+.approval-acts { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .settings-panel .timemode { width: fit-content; }
 
 .mapwrap { min-width: 0; }
@@ -211,6 +217,14 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .choice.swatch > span:first-of-type { width: 20px; height: 20px; padding: 0; }
 .choice input:checked + span { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
 .choice input:focus-visible + span { outline: 3px solid var(--amber); outline-offset: 1px; }
+.sheet-choice { display: inline-flex; gap: 2px; }
+.sheet-choice .btn { display: inline-flex; align-items: center; gap: 4px; }
+.sheet-choice img { image-rendering: pixelated; }
+.sheet-choice.on .btn:first-child { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber); }
+.sheet-picker label.btn { cursor: pointer; }
+.sheet-picker label.btn:focus-within { outline: 2px solid var(--amber); outline-offset: 2px; }
+.sheet-status { margin: 4px 0 0; font-size: 12px; color: var(--amber); }
+.sheet-hint { margin: 4px 0 0; font-size: 11px; color: var(--muted); line-height: 1.5; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .rename { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .rename input { flex: 1 1 160px; min-width: 0; font-family: var(--body); font-size: 14px; padding: 6px 8px; background: #181b20; color: var(--text); border: 1px solid var(--line); }
@@ -276,6 +290,41 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid 
 .shop-recent li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 45%; }
 .shop-rules b, .shop-recent b { color: var(--amber); }
 .shop .muted { color: var(--muted); font-size: 12px; }
+
+/* ---------- 오른쪽 클릭 메뉴 ---------- */
+.agent-menu { position: fixed; z-index: 20; min-width: 190px; padding: 4px; background: var(--panel); border: 2px solid var(--line); box-shadow: 4px 4px 0 rgba(0, 0, 0, .45); display: flex; flex-direction: column; }
+.agent-menu[hidden] { display: none; }
+.agent-menu-title { margin: 2px 8px 4px; font: 12px var(--pixel); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 240px; }
+.agent-menu [role="menuitem"] { display: block; width: 100%; padding: 6px 10px; background: none; border: 0; color: var(--text); font: 13px var(--body); text-align: left; text-decoration: none; cursor: pointer; }
+.agent-menu [role="menuitem"]:hover, .agent-menu [role="menuitem"]:focus-visible { background: var(--panel-2); color: var(--amber); outline: none; }
+.agent-menu [role="menuitem"].primary { color: var(--amber); }
+.agent-menu hr { width: 100%; margin: 4px 0; border: 0; border-top: 1px solid var(--line); }
+
+/* ---------- 기록실 (트로피 버튼) ---------- */
+.icon-button { display: grid; place-items: center; width: 34px; height: 34px; padding: 0; border: 2px solid var(--line); background: var(--panel); color: var(--muted); cursor: pointer; }
+.icon-button:hover { color: var(--amber); border-color: var(--amber); }
+.icon-button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+.records { width: min(760px, calc(100vw - 32px)); max-height: calc(100vh - 48px); padding: 18px 20px; background: var(--panel); color: var(--text); border: 3px solid var(--line); box-shadow: 6px 6px 0 rgba(0, 0, 0, .45); }
+.records::backdrop { background: rgba(8, 10, 14, .62); }
+.records-head { display: flex; align-items: center; gap: 12px; }
+.records-head h2 { margin: 0; font: 20px var(--pixel); flex: 1; }
+.records h3 { margin: 14px 0 6px; font: 14px var(--pixel); }
+.records .muted { color: var(--muted); font-size: 12px; }
+.records > p.muted:last-child { margin: 14px 0 0; }
+.records-best { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px; }
+.record-card { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding: 10px; background: var(--panel-2); border: 2px solid var(--line); font-size: 13px; }
+.record-label { color: var(--muted); font-size: 12px; }
+.record-value { font: 20px var(--pixel); color: var(--amber); }
+.record-holder { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.record-holder img { width: 26px; height: 22px; flex: none; image-rendering: pixelated; }
+.record-holder span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.record-request { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.record-when { color: var(--muted); font-size: 11px; }
+.records-foot { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.records-totals, .records-now { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+.records-totals li { display: flex; gap: 8px; justify-content: space-between; }
+.records-totals b { color: var(--amber); }
+.records-now li { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
 
 /* 코인을 번 캐릭터 머리 위로 떠오르는 "+코인" */
 .coin-pop { position: absolute; transform: translate(-50%, -100%); font: 13px var(--pixel); color: #ffd34d; text-shadow: 1px 1px 0 #3a2a00, -1px 0 0 #3a2a00, 0 -1px 0 #3a2a00; pointer-events: none; animation: coin-pop 1.6s ease-out forwards; }

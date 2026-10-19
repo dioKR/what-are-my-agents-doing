@@ -1,10 +1,13 @@
 // 캐릭터 한 장면(방향 × 자세 × 표정)을 그린다.
 // - 손으로 찍은 그림이 있는 기본 캐릭터(look.character)는 그 그림(sprites/)을 쓴다.
 // - 꾸미기로 머리 모양·옷을 바꾼 캐릭터는 아래의 부품 조립 방식으로 그린다 (24×36을 그려 32×44 도화지에 발을 맞춰 얹는다).
+// - 사용자가 올린 캐릭터 시트(look.character = 'sheet:<id>')는 그 PNG에서 장면을 잘라 쓴다. 시트를 못 불러오면 부품 조립 그림으로 대신한다.
 import { PixelSheet, shade } from './pixelSheet.ts';
 import type { HeadItem } from '../../../../shared/shop.ts';
 import { composeCharacter, SPRITE_FOOT_Y, SPRITE_H, SPRITE_W } from './sprites/compose.ts';
 import { CHARACTER_ART } from './sprites/index.ts';
+import { sheetFrame } from './sheets.ts';
+import { SHEET_POSES, sheetIdOf, type SheetPose } from '../../../../shared/characterSheet.ts';
 
 export const DOLL_W = SPRITE_W;
 export const DOLL_H = SPRITE_H;
@@ -20,7 +23,9 @@ const OUTLINE = '#221a26';
 
 export type Facing = 'down' | 'up' | 'left' | 'right';
 /** walk1·walk2는 한쪽 발을 든 장면. 두 발이 모이는 장면은 stand를 쓰고 몸을 1px 띄운다(그리는 쪽에서). */
-export type Pose = 'stand' | 'walk1' | 'walk2' | 'sit' | 'type1' | 'type2' | 'think' | 'raise' | 'drink' | 'stretch' | 'carry';
+export type Pose = 'stand' | 'walk1' | 'walk2' | 'sit' | 'type1' | 'type2' | 'think' | 'raise' | 'drink' | 'stretch' | 'carry'
+  /** 해파리 춤: 두 팔을 옆으로 펴고 물결친다. jelly1 왼팔 위 · 오른팔 아래 → jelly2 수평 → jelly3 왼팔 아래 · 오른팔 위 (화면 기준) */
+  | 'jelly1' | 'jelly2' | 'jelly3';
 export type Expression = 'normal' | 'blink' | 'focus' | 'happy' | 'panic' | 'sleepy';
 export type HairStyle = 'princess' | 'fluffy' | 'short' | 'spiky' | 'bob' | 'long' | 'ponytail' | 'buns' | 'shaggy' | 'dyedBob';
 export type Outfit = 'blouseSkirt' | 'shirtTie' | 'tee' | 'hoodie' | 'staffTee';
@@ -44,7 +49,7 @@ export interface DollLook {
   accessory: Accessory;
   /** 예전에 저장한 모습에는 없을 수 있다 */
   mark?: FaceMark;
-  /** 손으로 찍은 기본 캐릭터 id. 머리 모양·옷을 바꾸면 비운다 (그때는 부품 조립 방식으로 그린다) */
+  /** 손으로 찍은 기본 캐릭터 id, 또는 올린 캐릭터 시트('sheet:<id>'). 머리 모양·옷을 바꾸면 비운다 (그때는 부품 조립 방식으로 그린다) */
   character?: string;
 }
 
@@ -70,10 +75,20 @@ export function dollFrame(look: DollLook, facing: Facing, pose: Pose, expression
   const key = `${JSON.stringify(look)}|${facing}|${pose}|${expression}`;
   const cached = cache.get(key);
   if (cached) return cached;
+  const sheetId = sheetIdOf(look.character);
   const art = look.character ? CHARACTER_ART[look.character] : undefined;
-  const canvas = art ? composeCharacter(art, look, facing, pose, expression) : paintOnSpriteCanvas(look, facing, pose, expression);
+  const canvas = (sheetId ? sheetFrame(sheetId, facing, sheetPoseOf(pose)) : null)
+    ?? (art ? composeCharacter(art, look, facing, pose, expression) : paintOnSpriteCanvas(look, facing, pose, expression));
   cache.set(key, canvas);
   return canvas;
+}
+
+/** 시트에 칸이 없는 자세(해파리 춤)는 손든 그림으로 대신한다 */
+const sheetPoseOf = (pose: Pose): SheetPose => ((SHEET_POSES as readonly string[]).includes(pose) ? pose as SheetPose : 'raise');
+
+/** 캐릭터 시트를 새로 불러오거나 지웠을 때, 그 전에 그려 둔 장면을 버린다 */
+export function clearDollFrames(): void {
+  cache.clear();
 }
 
 /** 부품 조립 그림을 손 그림과 같은 크기의 도화지에 발 높이를 맞춰 얹는다 */
@@ -219,7 +234,7 @@ function arms(s: PixelSheet, view: View, pose: Pose, c: Colors, outfit: Outfit):
       }
       case 'think': s.rect(9, y(18), 2, 2, sleeve); s.rect(7, y(16), 2, 3, fore); s.rect(6, y(15), 2, 1, c.skin); return;
       case 'drink': s.rect(9, y(18), 2, 2, sleeve); s.rect(7, y(16), 2, 3, fore); s.rect(6, y(16), 1, 2, c.skin); return;
-      case 'raise': case 'stretch': case 'carry': arm(10, 4, 13, 2); return;
+      case 'raise': case 'stretch': case 'carry': case 'jelly1': case 'jelly2': case 'jelly3': arm(10, 4, 13, 2); return;
       default: arm(11, 18, 5, 23);
     }
     return;
@@ -241,6 +256,14 @@ function arms(s: PixelSheet, view: View, pose: Pose, c: Colors, outfit: Outfit):
     case 'raise': left(18, 4, 22); arm(19, 3, 14, 1); return;
     case 'stretch': arm(2, 3, 14, 1); arm(20, 3, 14, 1); return;
     case 'carry': arm(3, 2, 15, 0); arm(19, 2, 15, 0); return;
+    case 'jelly1': case 'jelly2': case 'jelly3': {
+      // 두 팔을 옆으로 쭉 펴고, 한쪽 손끝이 올라가면 다른 쪽은 내려간다
+      const UP = 16, LEVEL = 18, DOWN = 20;
+      const [leftHand, rightHand] = pose === 'jelly1' ? [UP, DOWN] : pose === 'jelly3' ? [DOWN, UP] : [LEVEL, LEVEL];
+      s.rect(1, y(18), 4, 2, fore); s.rect(19, y(18), 4, 2, fore);
+      s.rect(0, y(leftHand), 1, 2, c.skin); s.rect(23, y(rightHand), 1, 2, c.skin);
+      return;
+    }
     default: left(18, 4, 22); right(18, 4, 22);
   }
 }

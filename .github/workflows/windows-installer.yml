@@ -1,0 +1,53 @@
+# 사람들이 실제로 받는 윈도우 설치 파일을 깨끗한 윈도우에 설치하고 띄워 본다.
+# 릴리스 빌드(Release desktop app)가 끝나면 자동으로 돌고, Actions 탭에서 손으로도 돌릴 수 있다(Run workflow).
+# 앱 창 화면(desktop.png)을 installed-app-screen 으로 남긴다 — 맥에서 받아서 열어 보면 된다.
+name: Windows installer check
+
+on:
+  # release 이벤트는 워크플로 토큰으로 만든 릴리스에는 오지 않아서, 릴리스 워크플로가 끝난 뒤를 잡는다
+  workflow_run:
+    workflows: [Release desktop app]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 검사할 릴리스 태그 (비우면 최신)
+        required: false
+  # PR에서는 이 워크플로 파일을 고쳤을 때만 돈다. 이미 나온 설치 파일을 받아 검사하므로,
+  # 아직 릴리스되지 않은 화면 변경을 검사하는 PR에서 돌리면 당연히 실패한다
+  pull_request:
+    paths: [.github/workflows/windows-installer.yml]
+
+jobs:
+  install-and-run:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Download the installer
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.workflow_run.head_branch || inputs.tag }}
+        run: |
+          if ($env:TAG) { gh release download $env:TAG --pattern wamad-windows-setup.exe --dir installer }
+          else { gh release download --pattern wamad-windows-setup.exe --dir installer }
+      - name: Install silently
+        run: |
+          Start-Process installer\wamad-windows-setup.exe -ArgumentList '/S' -Wait
+          $exe = Get-ChildItem "$env:LOCALAPPDATA\Programs" -Recurse -Filter 'What Are My Agents Doing.exe' | Select-Object -First 1
+          if (-not $exe) { throw '설치된 앱 실행 파일을 찾지 못했습니다' }
+          "WAMAD_APP_EXE=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+      - name: Run the installed app
+        run: npm run test:desktop
+      - name: Keep the app screen
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: installed-app-screen
+          path: e2e-artifacts/
+          if-no-files-found: ignore

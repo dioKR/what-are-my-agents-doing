@@ -1,6 +1,7 @@
 // 에이전트 표시 이름. 사용자가 바꾼 이름은 "도구 + 작업 폴더" 기준으로 이 브라우저에 저장한다.
 // 그래서 같은 폴더에서 Claude Code를 다시 띄워도 같은 이름으로 나온다.
 import type { AgentSnapshot, ToolKind } from '../../shared/protocol.ts';
+import { profileKey } from '../../shared/profile.ts';
 
 const STORAGE_KEY = 'wamad.names';
 /** 이름을 바꾸기 전(Agent Office)에 저장한 값 */
@@ -20,11 +21,10 @@ function readSaved(): Record<string, string> {
   }
 }
 
-/**
- * 이름·꾸미기·상점 착용을 기억하는 기준: 같은 도구 + 같은 프로젝트 폴더면 같은 에이전트로 본다. 팀원은 팀원 이름까지 본다.
- * 작업 중 하위 폴더로 cd 해도 바뀌지 않도록 그 순간의 작업 폴더(cwd)가 아니라 프로젝트 폴더를 쓴다.
- */
-export const profileKey = (agent: AgentSnapshot) => `${agent.tool}:${agent.projectDir ?? agent.cwd}${agent.parentId ? `:${agent.memberName ?? agent.role}` : ''}`;
+export { profileKey };
+
+/** 이 기준(profileKey)으로 사용자가 바꿔 둔 이름. 없으면 null */
+export const savedNameOf = (key: string): string | null => saved[key] ?? null;
 
 const ROLE_LABEL: Record<string, string> = { po: 'PO', pm: 'PM', design: 'Design', fe: 'FE', be: 'BE', infra: 'Infra', qa: 'QA', data: 'Data' };
 export const roleLabel = (role: string | null) => (role ? ROLE_LABEL[role] ?? role : '');
