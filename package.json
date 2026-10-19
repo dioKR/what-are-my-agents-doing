@@ -53,9 +53,12 @@
     "dist:desktop": "npm run build && npm run build:server && electron-builder --publish never",
     "prepublishOnly": "npm run typecheck && npm test && npm run build && npm run build:server",
     "test:e2e": "node --test \"e2e/**/*.test.mjs\"",
-    "test:desktop": "node --test e2e/desktop.app.mjs"
+    "test:desktop": "node --test e2e/desktop.app.mjs",
+    "changeset:version": "changeset version && npm install --package-lock-only --ignore-scripts",
+    "release": "changeset publish"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@types/node": "^26.6.5",
     "electron": "^44.7.2",
     "electron-builder": "^26.15.3",

@@ -1,0 +1,48 @@
+# main에 쌓인 변경 메모(.changeset/*.md)를 모아 "새 버전 준비" PR을 만들고, 그 PR이 머지되면 태그를 붙인다.
+# 태그가 붙으면 release.yml이 데스크톱 앱을 빌드해 GitHub Release에 올린다.
+#
+# 필요한 설정 (CONTRIBUTING.md "Releasing" 참고)
+# - secrets.CHANGESETS_TOKEN: 이 저장소만 쓸 수 있는 fine-grained 토큰 (Contents · Pull requests 읽기/쓰기).
+#   GitHub 기본 토큰으로 만든 PR·태그는 다른 워크플로를 깨우지 않아서, 버전 PR에 CI가 안 돌고(=머지 불가) 태그가 붙어도 앱 빌드가 안 돈다.
+# - vars.NPM_TRUSTED_PUBLISHING = 'true': npmjs.com에서 이 저장소를 Trusted Publisher로 등록한 뒤 켠다.
+#   켜기 전에는 npm 공개는 하지 않고 태그만 붙인다 (npm은 손으로 공개).
+name: Version and release
+
+on:
+  push:
+    branches: [main]
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write # npm Trusted Publishing(토큰 없이 공개)에 쓴다
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.CHANGESETS_TOKEN || github.token }}
+          # 이미 붙은 태그(v0.4.0 등)를 알아야 같은 태그를 또 만들려다 실패하지 않는다
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          registry-url: https://registry.npmjs.org
+      - run: npm ci
+      - name: Version PR, or tag (and publish) after it merges
+        uses: changesets/action@v1
+        with:
+          version: npm run changeset:version
+          publish: ${{ vars.NPM_TRUSTED_PUBLISHING == 'true' && 'npm run release' || 'npx changeset tag' }}
+          title: 'chore: 새 버전 준비 (Version Packages)'
+          commit: 'chore: 새 버전 준비'
+          createGithubReleases: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.CHANGESETS_TOKEN || github.token }}
+      - name: Push new tags (starts the desktop app build)
+        run: git push origin --tags

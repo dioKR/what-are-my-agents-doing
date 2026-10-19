@@ -70,3 +70,24 @@ Preview every direction, pose and accessory at http://localhost:5173/dev/sprite-
 1. Add it to `SHOP_ITEMS` in `shared/shop.ts` (id, slot, price, Korean and English names).
 2. Draw it: headwear in `ACCESSORY_ART` (`sprites/accessories.ts`), pets in `PET_ART` (`pets/petArt.ts`).
 3. `npm test` tells you if something is missing.
+
+## Changesets (please add one to your PR)
+
+If your PR changes something users notice, run:
+
+```bash
+npx changeset
+```
+
+Pick **patch** for a fix or **minor** for a new feature, and write one line about it. This adds a small file under `.changeset/`. Docs-only or CI-only PRs don't need one.
+
+## Releasing (maintainers)
+
+1. Merging PRs with changesets into `main` makes the **Version and release** workflow open a "chore: 새 버전 준비 (Version Packages)" PR. It bumps `package.json` and writes `CHANGELOG.md`.
+2. Merging that PR tags the new version (`vX.Y.Z`). The tag starts **Release desktop app**, which builds the macOS and Windows installers and creates the GitHub Release from the CHANGELOG section.
+3. npm: once Trusted Publishing is set up (below), the same workflow also publishes to npm. Until then, publish by hand with `npm publish --auth-type=web`.
+
+One-time setup:
+
+- **`CHANGESETS_TOKEN` secret.** Create a fine-grained personal access token for this repository only, with *Contents: Read and write* and *Pull requests: Read and write*, and save it under Settings → Secrets and variables → Actions. PRs and tags created with GitHub's default token don't start other workflows, so without it CI never runs on the version PR (and branch protection blocks the merge) and tags don't start the desktop build.
+- **npm Trusted Publishing.** After the package exists on npm, open its settings on npmjs.com → *Trusted Publisher* → GitHub Actions, and enter owner `dioKR`, repository `what-are-my-agents-doing`, workflow `version.yml`. Then set the repository variable `NPM_TRUSTED_PUBLISHING` to `true`. No npm token is stored anywhere.
