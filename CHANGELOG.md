@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- 1dbfe74: **Four new expressions.** Characters cry after you deny them in the app or after failing 2–4 times in a row, look surprised while asking for permission, get star eyes after earning 5+ coins at once (PR, git push, team task), and look worn out at 70–80% context.
+- fefbb7a: **Zoom and move the map.** Pinch on a trackpad or Ctrl (⌘) + mouse wheel to zoom in on the spot you point at (up to 3×), drag to move around, or use the zoom in / zoom out / whole map buttons at the bottom right. Name tags and speech bubbles keep their size.
+- dc482c0: **Coins for `git push`.** Agents earn +5 coins when a `git push` they run succeeds, for those who push without opening PRs. Failed pushes and `--dry-run` don't count (#19).
+
+### Patch Changes
+
+- c94e42c: Releases are now prepared with Changesets: each PR leaves a short note, and a "Version Packages" PR bumps the version and updates this changelog.
+- ae27a61: Fixed: on Windows, selecting the second or third agent made the screen shake. The scrollbar kept appearing and disappearing and changed the page width; its space is now always reserved (#20).
+
 ## 0.4.0
 
 - **Allow or deny permission prompts from the app.** Turn on "Answer permission prompts here" in the settings (off by default). When Claude Code asks to run a tool, the agent's details show what it wants to run with Allow and Deny. Claude Code waits up to 30 seconds for your answer, then asks in the terminal as usual. Only the page served on this computer can answer. The desktop app adds the new hook by itself; if you use the `wamad` command, run `wamad hooks install` once again.
