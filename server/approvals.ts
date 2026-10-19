@@ -62,10 +62,10 @@ export function permissionHookOutput(decision: ApprovalDecision): object {
   };
 }
 
-/** 앱에서 대답한 뒤 캐릭터 상태: 허용하면 바로 일하고, 거부하면 다음 할 일을 생각한다 */
-export function afterDecision(agent: AgentSnapshot, decision: ApprovalDecision): AgentSnapshot {
+/** 앱에서 대답한 뒤 캐릭터 상태: 허용하면 바로 일하고, 거부하면 다음 할 일을 생각한다 (거부당한 시각을 남겨 잠깐 운다) */
+export function afterDecision(agent: AgentSnapshot, decision: ApprovalDecision, now: number): AgentSnapshot {
   if (agent.activity !== 'waiting-permission') return agent;
-  return { ...agent, activity: decision === 'allow' ? 'working' : 'thinking' };
+  return decision === 'allow' ? { ...agent, activity: 'working' } : { ...agent, activity: 'thinking', deniedAt: now };
 }
 
 const LOOPBACK = new Set(['127.0.0.1', 'localhost', '[::1]']);

@@ -120,6 +120,8 @@ export interface AgentSnapshot {
   subagents: SubagentInfo[];
   mail: MailRecord[];
   failStreak: number;
+  /** 앱에서 권한 질문을 마지막으로 거부당한 시각 (거부당한 적 없으면 없음). 잠깐 우는 얼굴을 한다 */
+  deniedAt?: number;
   startedAt: number;
   updatedAt: number;
 }

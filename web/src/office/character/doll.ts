@@ -26,7 +26,9 @@ export type Facing = 'down' | 'up' | 'left' | 'right';
 export type Pose = 'stand' | 'walk1' | 'walk2' | 'sit' | 'type1' | 'type2' | 'think' | 'raise' | 'drink' | 'stretch' | 'carry'
   /** 해파리 춤: 두 팔을 옆으로 펴고 물결친다. jelly1 왼팔 위 · 오른팔 아래 → jelly2 수평 → jelly3 왼팔 아래 · 오른팔 위 (화면 기준) */
   | 'jelly1' | 'jelly2' | 'jelly3';
-export type Expression = 'normal' | 'blink' | 'focus' | 'happy' | 'panic' | 'sleepy';
+export type Expression = 'normal' | 'blink' | 'focus' | 'happy' | 'panic' | 'sleepy'
+  /** 우는 얼굴 · 놀란 얼굴 · 뿌듯한 별 눈 · 지친 반쯤 감은 눈 */
+  | 'cry' | 'surprised' | 'proud' | 'tired';
 export type HairStyle = 'princess' | 'fluffy' | 'short' | 'spiky' | 'bob' | 'long' | 'ponytail' | 'buns' | 'shaggy' | 'dyedBob';
 export type Outfit = 'blouseSkirt' | 'shirtTie' | 'tee' | 'hoodie' | 'staffTee';
 export type EyeStyle = 'round' | 'heart';
@@ -67,6 +69,7 @@ const LANYARD = '#2f6fe0';
 const DYED_TIPS = '#c8283c'; // 투톤 단발의 붉은 끝머리
 const BANDAGE = '#f3cfa4';
 const SILVER = '#dfe4ec';
+const TEAR = '#8fd3ff';
 
 const cache = new Map<string, HTMLCanvasElement>();
 
@@ -374,7 +377,7 @@ function ahoge(s: PixelSheet, view: View, c: Colors): void {
 function face(s: PixelSheet, view: View, expression: Expression, eyeStyle: EyeStyle, c: Colors): void {
   const side = view === 'left';
   for (const ex of side ? [4] : [6, 15]) eye(s, ex, expression, eyeStyle, c, side);
-  if (expression !== 'panic') {
+  if (expression !== 'panic' && expression !== 'cry') {
     if (side) s.rect(3, y(14), 2, 1, BLUSH);
     else { s.rect(4, y(14), 2, 1, BLUSH); s.rect(18, y(14), 2, 1, BLUSH); }
   }
@@ -384,7 +387,10 @@ function face(s: PixelSheet, view: View, expression: Expression, eyeStyle: EyeSt
       s.rect(mx, y(15), 2, 2, LASH);
       s.set(side ? 16 : 21, y(5), '#8fd3ff'); s.rect(side ? 15 : 20, y(6), 2, 2, '#8fd3ff');
       break;
-    case 'happy': s.set(mx - 1, y(15), MOUTH); s.rect(mx, y(16), 2, 1, MOUTH); s.set(mx + 2, y(15), MOUTH); break;
+    case 'happy': case 'proud': s.set(mx - 1, y(15), MOUTH); s.rect(mx, y(16), 2, 1, MOUTH); s.set(mx + 2, y(15), MOUTH); break;
+    case 'cry': s.rect(mx, y(15), 2, 1, MOUTH); s.set(mx - 1, y(16), MOUTH); s.set(mx + 2, y(16), MOUTH); break; // 입꼬리가 내려감
+    case 'surprised': s.rect(mx, y(15), 2, 2, MOUTH); break; // 동그란 입
+    case 'tired': s.rect(mx, y(15), 2, 1, shade(MOUTH, -0.25)); break; // 일자 입
     case 'focus': s.set(mx + 1, y(15), MOUTH); break;
     default: s.set(mx, y(15), MOUTH); s.set(mx + 1, y(15), MOUTH);
   }
@@ -402,6 +408,25 @@ function eye(s: PixelSheet, x: number, expression: Expression, style: EyeStyle, 
       return;
     case 'panic':
       s.rect(x, y(11), 3, 3, '#ffffff'); s.set(x + 1, y(12), LASH); s.rect(x, y(10), 3, 1, LASH);
+      return;
+    case 'cry':
+      // 꼭 감은 눈(아래로 휜 줄) 아래로 눈물 두 방울
+      s.rect(x, y(12), 3, 1, LASH); s.set(lashOut, y(13), LASH);
+      s.set(x + 1, y(13), TEAR); s.set(x + 1, y(14), TEAR);
+      return;
+    case 'surprised':
+      // 평소 눈보다 한 줄 위로 크게 뜬 눈
+      s.rect(x, y(9), 3, 1, LASH); s.set(lashOut, y(9), LASH);
+      s.rect(x, y(10), 3, 3, c.eyes); s.set(x + 1, y(11), c.eyesDark); s.set(x, y(10), '#ffffff'); s.rect(x, y(13), 3, 1, c.eyesDark);
+      return;
+    case 'proud':
+      // 반짝이는 별 눈: 가운데 흰 점, 상하좌우로 눈동자 색
+      s.set(x + 1, y(10), c.eyes); s.rect(x, y(11), 3, 1, c.eyes); s.set(x + 1, y(12), c.eyes); s.set(x + 1, y(11), '#ffffff');
+      return;
+    case 'tired':
+      // 눈꺼풀이 반쯤 내려온 눈
+      s.rect(x, y(11), 3, 1, LASH); s.set(lashOut, y(11), LASH);
+      s.rect(x, y(12), 3, 1, c.eyes); s.set(x + 1, y(12), c.eyesDark); s.rect(x, y(13), 3, 1, c.eyesDark);
       return;
     case 'focus':
       s.rect(x, y(11), 3, 1, LASH); s.set(lashOut, y(11), LASH);

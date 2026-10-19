@@ -13,6 +13,7 @@ canvas{image-rendering:pixelated;display:block}
 // 손으로 찍은 캐릭터의 모든 방향 · 자세 · 표정 · 소품을 한 장에 펼친다
 import { composeCharacter } from '../src/office/character/sprites/compose.ts';
 import { CHARACTER_ART } from '../src/office/character/sprites/index.ts';
+import { dollFrame } from '../src/office/character/doll.ts';
 import { PRESETS } from '../src/office/look.ts';
 const id = new URLSearchParams(location.search).get('c') ?? 'brown';
 const look = PRESETS.find((p) => p.id === id).look;
@@ -23,6 +24,8 @@ const out = document.getElementById('out');
 const line = (label, frames) => { const r = document.createElement('div'); r.className = 'row'; const s = document.createElement('span'); s.textContent = label; r.append(s, ...frames.map((f) => big(f))); out.append(r); };
 for (const f of ['down', 'up', 'left', 'right']) line(f, ['stand', 'walk1', 'walk2', 'type1', 'type2', 'sit', 'think', 'raise', 'stretch'].map((p) => composeCharacter(art, look, f, p, 'normal')));
 line('해파리 춤', ['down', 'up'].flatMap((f) => ['jelly1', 'jelly2', 'jelly3'].map((p) => composeCharacter(art, { ...look, accessory: 'none' }, f, p, 'happy'))));
+line('새 표정', ['cry', 'surprised', 'proud', 'tired'].flatMap((e) => [composeCharacter(art, look, 'down', 'stand', e), composeCharacter(art, look, 'left', 'stand', e)]));
+line('꾸민 캐릭터 표정', ['normal', 'cry', 'surprised', 'proud', 'tired'].flatMap((e) => [dollFrame({ ...look, character: undefined, hairStyle: 'bob', outfit: 'tee' }, 'down', 'stand', e), dollFrame({ ...look, character: undefined, hairStyle: 'bob', outfit: 'tee' }, 'left', 'stand', e)]));
 line('표정', ['normal', 'blink', 'happy', 'focus', 'panic', 'sleepy'].flatMap((e) => [composeCharacter(art, look, 'down', 'stand', e), composeCharacter(art, look, 'left', 'stand', e)]));
 line('소품', ['crown', 'glasses', 'ribbon', 'beret', 'cap', 'headphones', 'starclip', 'sprout', 'mailcap'].map((a) => composeCharacter(art, { ...look, accessory: a }, 'down', 'stand', 'normal')));
 line('소품 옆', ['crown', 'glasses', 'ribbon', 'beret', 'cap', 'starclip', 'mailcap'].map((a) => composeCharacter(art, { ...look, accessory: a }, 'left', 'stand', 'normal')));
