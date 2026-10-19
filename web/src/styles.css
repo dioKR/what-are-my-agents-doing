@@ -23,6 +23,9 @@
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+/* 윈도우처럼 스크롤바가 폭을 차지하는 곳에서, 스크롤바가 생겼다 사라졌다 하며 지도 크기가 계속 바뀌어
+   화면이 떨리지 않도록 스크롤바 자리를 늘 비워 둔다 (#20) */
+html { scrollbar-gutter: stable; }
 body { margin: 0; background: var(--page); color: var(--text); font-family: var(--body); font-size: 14px; padding: 20px 16px; }
 a { color: var(--amber); }
 button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
