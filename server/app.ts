@@ -192,7 +192,7 @@ async function askPermission(req: IncomingMessage, res: ServerResponse): Promise
   const decision = await pending.decision;
   if (!decision) { res.writeHead(200).end(); return; }
   const current = agents.get(agent.id);
-  if (current) upsert(afterDecision(current, decision));
+  if (current) upsert(afterDecision(current, decision, Date.now()));
   res.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify(permissionHookOutput(decision)));
 }
 

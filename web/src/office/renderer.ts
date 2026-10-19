@@ -1,6 +1,7 @@
 // 한 프레임을 그린다: 바닥·벽 → 창문 → (가구·침대·캐릭터를 아래쪽에 있는 것부터) → 머리 위 아이콘 → 선택 표시 → 조명.
+import { expressionOf } from './expression.ts';
 import { danceMoveAt } from './dance.ts';
-import type { Activity, AgentSnapshot } from '../../../shared/protocol.ts';
+import type { AgentSnapshot } from '../../../shared/protocol.ts';
 import { BEDS, LIGHTS, TILE, WINDOWS, furniture } from './map.ts';
 import { drawBed, drawFurniture, drawWindow, type BoardCard, type FurnitureContext } from './furnitureArt.ts';
 import { COURIER_LOOK, subagentLook, type Look } from './look.ts';
@@ -129,7 +130,7 @@ function drawActor(input: RenderInput, actor: Actor, agent: AgentSnapshot | unde
     g.fillStyle = 'rgba(0,0,0,0.25)';
     g.fillRect(box.x + (DOLL_W - SHADOW_W) / 2, box.y + FOOT_Y - 1, SHADOW_W, 3);
   }
-  const { pose, expression, lift } = chooseFrame(actor, agent?.activity, input.time, input.reduceMotion);
+  const { pose, expression, lift } = chooseFrame(actor, agent, input.time, input.reduceMotion);
   drawDoll(g, actor.look, input.director.facingOf(actor), pose, expression, box.x, box.y - lift);
   const carriedX = box.x + (DOLL_W - CARRIED_W) / 2;
   if (actor.carrying === 'parcel') drawParcel(g, carriedX, box.y - 3 - lift);
@@ -148,7 +149,8 @@ function drawBlanketOver(g: CanvasRenderingContext2D, actor: Actor): void {
 }
 
 /** 지금 상태에 맞는 자세와 표정. 같은 상태라도 시간에 따라 기지개·커피 같은 작은 동작을 섞는다. */
-function chooseFrame(actor: Actor, activity: Activity | undefined, time: number, reduceMotion: boolean): { pose: Pose; expression: Expression; lift: number } {
+function chooseFrame(actor: Actor, agent: AgentSnapshot | undefined, time: number, reduceMotion: boolean): { pose: Pose; expression: Expression; lift: number } {
+  const activity = agent?.activity;
   const phase = time + actor.slot * 1.7;
   const every = (period: number, length: number) => !reduceMotion && phase % period < length;
 
@@ -172,13 +174,9 @@ function chooseFrame(actor: Actor, activity: Activity | undefined, time: number,
   } else if (actor.place === 'lounge') pose = every(SIP_EVERY, SIP_LENGTH) ? 'drink' : 'stand';
   else if (actor.place === 'server') pose = Math.floor(time * 4) % 2 ? 'type1' : 'type2';
 
-  let expression: Expression = 'normal';
-  if (actor.isDancing) expression = 'happy';
-  else if (activity === 'stuck') expression = 'panic';
-  else if (actor.cheerLeft > 0) expression = 'happy';
-  else if (activity === 'working' && actor.isSeated) expression = 'focus';
+  let expression = expressionOf(actor, agent, Date.now());
   const blinking = !reduceMotion && (time + actor.slot * 1.3) % BLINK_EVERY < BLINK_LENGTH;
-  if (blinking && (expression === 'normal' || expression === 'focus')) expression = 'blink';
+  if (blinking && (expression === 'normal' || expression === 'focus' || expression === 'tired')) expression = 'blink';
   // 서 있을 때는 숨 쉬듯 아주 살짝 들썩인다
   if (!actor.isMoving && !actor.isSeated && !actor.isDancing && every(1.6, 0.8)) lift = 1;
   return { pose, expression, lift };

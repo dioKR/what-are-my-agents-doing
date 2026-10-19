@@ -21,6 +21,7 @@ const NOT_FOR_CLUB: ReadonlySet<Activity> = new Set(['compacting', 'ended']);
 /** 춤출 때 도는 방향 (박자마다 하나씩) */
 /** 한 턴을 마치면 이만큼 웃는다 */
 const CHEER_SECONDS = 3;
+const PROUD_SECONDS = 4;
 /** 팀원이 메시지를 보내면 그 말풍선을 이만큼 띄운다 */
 const SAY_SECONDS = 5;
 /** CEO 지시가 들어오면 리더 말풍선을 이만큼, 팀원들은 리더 쪽을 이만큼 본다 */
@@ -71,6 +72,8 @@ export class Actor {
   facing: Facing = 'down';
   /** 0보다 크면 웃는 얼굴 (초) */
   cheerLeft = 0;
+  /** 코인을 많이 벌어 뿌듯해하는 남은 시간(초) */
+  proudLeft = 0;
   lastActivity: Activity | null = null;
   /** 몇 번째로 나타난 에이전트인지 (기본 생김새를 정할 때 쓴다) */
   appearanceIndex = 0;
@@ -336,6 +339,7 @@ export class ActorDirector {
     for (const actor of this.actors.values()) {
       const agent = agents.get(actor.id);
       actor.cheerLeft = Math.max(0, actor.cheerLeft - dt);
+      actor.proudLeft = Math.max(0, actor.proudLeft - dt);
       if (agent) this.noticeActivityChange(actor, agent.activity);
       if (actor.removed) actor.step(dt);
       else if (actor.scene) this.runMailScene(actor, dt);
@@ -343,6 +347,12 @@ export class ActorDirector {
       if (actor.isGone) this.actors.delete(actor.id);
     }
     this.courier.update(dt);
+  }
+
+  /** PR · git push · 팀 할 일처럼 코인을 많이 번 순간 잠깐 별 눈을 한다 */
+  celebrate(agentId: string): void {
+    const actor = this.actors.get(agentId);
+    if (actor) actor.proudLeft = PROUD_SECONDS;
   }
 
   private noticeActivityChange(actor: Actor, activity: Activity): void {

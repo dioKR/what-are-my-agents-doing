@@ -34,6 +34,8 @@ import { activeCoinPops, addCoinPop, buyItem, currentWallet, equipItem, equipped
 const MAP_PX_W = MAP_W * TILE;
 const MAP_PX_H = MAP_H * TILE;
 /** 화면에 보이는 범위 (지도 픽셀) */
+/** 한 번에 이만큼 넘게 벌면(PR · git push · 팀 할 일) 캐릭터가 뿌듯해한다 */
+const PROUD_MIN_COINS = 5;
 const VIEW_PX = { x: VIEW.x * TILE, y: VIEW.y * TILE, w: VIEW.w * TILE, h: VIEW.h * TILE };
 const PANEL_REFRESH_SECONDS = 0.25;
 const MAX_FRAME_SECONDS = 0.1;
@@ -111,6 +113,7 @@ function applyMessage(message: ServerMessage): void {
   }
   if (message.type === 'reward') {
     addCoinPop(message.agentId, message.amount, clock);
+    if (message.amount >= PROUD_MIN_COINS) director.celebrate(message.agentId);
     return;
   }
   if (message.type === 'snapshot') {

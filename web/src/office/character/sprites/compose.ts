@@ -93,11 +93,43 @@ function headWithExpression(art: CharacterArt, view: View, expression: Expressio
         for (let y = eye.y; y <= bottom; y++) for (let x = eye.x; x < eye.x + eye.w; x++) set(x, y, 'w');
         set(eye.x, eye.y + 1, 'e');
         break;
+      case 'cry': {
+        // 꼭 감은 눈(아래로 휜 줄) 아래로 눈물 두 방울 (x: 하늘색)
+        clear(eye);
+        for (let x = eye.x; x < eye.x + eye.w; x++) set(x, bottom - 1, 'e');
+        set(eye.x - 1, bottom, 'e'); set(eye.x + eye.w, bottom, 'e');
+        const tearX = eye.x + Math.floor(eye.w / 2);
+        set(tearX, bottom, 'x'); set(tearX, bottom + 1, 'x');
+        break;
+      }
+      case 'surprised':
+        // 크게 뜬 눈: 눈 칸 위 한 줄을 속눈썹으로 올리고, 눈 안에 흰 반짝임
+        for (let x = eye.x; x < eye.x + eye.w; x++) set(x, eye.y - 1, 'e');
+        set(eye.x, eye.y, 'w');
+        break;
+      case 'proud': {
+        // 별 눈: 가운데 줄 · 가운데 칸을 눈동자 색으로, 한가운데 흰 점
+        clear(eye);
+        const cx = eye.x + Math.floor((eye.w - 1) / 2);
+        const cy = eye.y + Math.floor((eye.h - 1) / 2);
+        for (let x = eye.x; x < eye.x + eye.w; x++) set(x, cy, 'E');
+        for (let y = eye.y; y <= bottom; y++) set(cx, y, 'E');
+        set(cx, cy, 'w');
+        break;
+      }
+      case 'tired':
+        // 반쯤 감은 눈: 윗부분을 피부로 덮고 그 경계를 눈꺼풀 줄로
+        for (let y = eye.y; y < eye.y + Math.floor(eye.h / 2); y++) for (let x = eye.x; x < eye.x + eye.w; x++) set(x, y, 's');
+        for (let x = eye.x; x < eye.x + eye.w; x++) set(x, eye.y + Math.floor(eye.h / 2), 'e');
+        break;
       case 'normal':
         break;
     }
   }
-  if (expression === 'happy') { for (let x = mouth.x; x < mouth.x + mouth.w; x++) set(x, mouth.y, 'm'); set(mouth.x - 1, mouth.y - 1, 'm'); set(mouth.x + mouth.w, mouth.y - 1, 'm'); }
+  if (expression === 'cry') { for (let x = mouth.x; x < mouth.x + mouth.w; x++) set(x, mouth.y, 'm'); set(mouth.x - 1, mouth.y + 1, 'm'); set(mouth.x + mouth.w, mouth.y + 1, 'm'); }
+  if (expression === 'surprised') { for (let x = mouth.x; x < mouth.x + Math.max(2, mouth.w); x++) { set(x, mouth.y, 'm'); set(x, mouth.y + 1, 'm'); } }
+  if (expression === 'tired') { for (let x = mouth.x; x < mouth.x + mouth.w; x++) set(x, mouth.y, 'p'); }
+  if (expression === 'happy' || expression === 'proud') { for (let x = mouth.x; x < mouth.x + mouth.w; x++) set(x, mouth.y, 'm'); set(mouth.x - 1, mouth.y - 1, 'm'); set(mouth.x + mouth.w, mouth.y - 1, 'm'); }
   if (expression === 'panic') { for (let x = mouth.x; x < mouth.x + Math.max(2, mouth.w); x++) { set(x, mouth.y, 'e'); set(x, mouth.y + 1, 'e'); } }
   return rows.map((r) => r.join(''));
 }
