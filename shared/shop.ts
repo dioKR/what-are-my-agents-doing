@@ -32,10 +32,11 @@ export const SHOP_ITEMS: readonly ShopItem[] = [
 export const shopItem = (id: string): ShopItem | undefined => SHOP_ITEMS.find((item) => item.id === id);
 
 /** 코인을 버는 일과 그때 받는 코인 */
-export type RewardReason = 'turn' | 'todo' | 'pr' | 'teamTask';
+export type RewardReason = 'turn' | 'todo' | 'push' | 'pr' | 'teamTask';
 export const REWARD_COINS: Record<RewardReason, number> = {
   turn: 1, // 일을 하다가 한 턴을 끝까지 마침
   todo: 3, // 할 일 목록에서 하나를 끝냄
+  push: 5, // git push에 성공함 (PR 없이 바로 올리는 경우도 셈, #19)
   pr: 10, // PR을 올림 (PR 주소를 알려 줌)
   teamTask: 5 // 에이전트 팀의 할 일 하나를 끝냄
 };

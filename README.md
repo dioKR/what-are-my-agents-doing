@@ -185,6 +185,7 @@ Your agents earn coins by working, and you spend them on headwear and pets for t
 |---|---|
 | Finished a turn of work | +1 |
 | Completed a todo | +3 |
+| Pushed with `git push` | +5 |
 | Completed an agent team task | +5 |
 | Opened a PR | +10 |
 

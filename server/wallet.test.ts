@@ -41,3 +41,16 @@ test('코인이 모자라면 못 사고, 산 물건만 같은 칸에 입힐 수 
   const off = worn.ok ? equip(worn.state, 'k', 'head', null) : worn;
   assert.ok(off.ok && !('k' in off.state.equipped));
 });
+
+test('git push에 성공하면 5코인: 훅이 준 명령으로도, 대화 기록처럼 명령 없이 와도 센다', () => {
+  const push = (command: string) => applyClaudeHook(undefined, e({ tool_name: 'Bash', tool_input: { command } }), 1);
+  const done = (response: unknown = { exit_code: 0 }) => e({ hook_event_name: 'PostToolUse', tool_name: 'Bash', tool_response: response });
+  const started = push('git push origin main');
+  assert.deepEqual(rewardsFor(started, started, { ...done(), tool_input: { command: 'git push origin main' } }), ['push']);
+  assert.deepEqual(rewardsFor(started, started, done()), ['push']); // 명령 없이 끝 이벤트만 (대화 기록)
+  assert.deepEqual(rewardsFor(push('git -C ../web push'), started, done()), ['push']);
+  assert.deepEqual(rewardsFor(started, started, done({ exit_code: 1 })), []); // 실패
+  assert.deepEqual(rewardsFor(push('git push --dry-run'), started, done()), []);
+  assert.deepEqual(rewardsFor(push('git pull && npm test'), started, done()), []);
+  assert.deepEqual(rewardsFor(push('echo "git pushed"'), started, done()), []);
+});
